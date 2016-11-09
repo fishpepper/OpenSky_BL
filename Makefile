@@ -13,7 +13,7 @@ ifdef DEBUG
 CFLAGS += --debug
 endif
 
-SRC = main.c
+SRC = main.c uart.c delay.c
 
 ADB=$(SRC:.c=.adb)
 ASM=$(SRC:.c=.asm)
