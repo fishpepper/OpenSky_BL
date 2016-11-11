@@ -19,6 +19,7 @@
 #include "config.h"
 #include "cc25xx.h"
 
+//http://www.ti.com/lit/an/swra222b/swra222b.pdf
 
 void uart_init(void) {
     __xdata union hal_uart_config_t uart_config;
@@ -54,12 +55,12 @@ void uart_init(void) {
     U0GCR = (U0GCR & ~0x1F) | (UART_BAUD_E);
 
     //set up config
-    uart_config.bit.START = 0; //startbit level = low
-    uart_config.bit.STOP  = 1; //stopbit level = high
-    uart_config.bit.SPB   = 0; //1 stopbit
-    uart_config.bit.PARITY = 0; //no parity
+    uart_config.bit.START  = 0; //startbit level = low
+    uart_config.bit.STOP   = 1; //stopbit level = high
+    uart_config.bit.SPB    = 0; //1 stopbit
+    uart_config.bit.PARITY = 1; //1 = parity enabled, D9=0 -> even parity
     uart_config.bit.BIT9   = 0; //8bit
-    uart_config.bit.D9     = 0; //8 Bits
+    uart_config.bit.D9     = 1; //EVEN parity
     uart_config.bit.FLOW   = 0; //no hw flow control
     uart_config.bit.ORDER  = 0; //lsb first
 
@@ -79,7 +80,35 @@ void uart_init(void) {
     //interrupt prio to 01 (0..3=highest)
     IP0 |=  (1<<2);
     IP1 &= ~(1<<2);
+
+    //enable receiver
+    U0CSR |= 0x40;
 }
+
+uint8_t uart_getc(void) {
+    uint8_t res = 0;
+
+
+    //??? U0CSR |= 0x40;
+
+    //wait for RX
+    while(!URX0IF) {}
+
+    //fetch data
+    res = U0DBUF;
+
+    //clear flag
+    URX0IF = 0;
+
+    return res;
+}
+
+void uart_putc(uint8_t c) {
+    UTX0IF = 0;
+    U0DBUF = c;
+    while (!UTX0IF) {}
+}
+
 /*
 void hal_uart_start_transmission(uint8_t ch){
     //clear flags

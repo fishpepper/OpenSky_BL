@@ -2,9 +2,9 @@ CC = sdcc
 CFLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include -Wl-bIVECT=0 
 LDFLAGS_FLASH = \
 --out-fmt-ihx \
---code-loc 0x000 --code-size 0x4000 \
---xram-loc 0xf000 --xram-size 0x300 \
---iram-size 0x10
+--code-loc 0x000 --code-size 0x2000 \
+--xram-loc 0xf000 --xram-size 0x7FF \
+--iram-size 0x100
 
 AS = sdas8051
 ASFLAGS = -plosgff
