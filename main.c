@@ -288,7 +288,57 @@ void main(void) {
 
                 //checksum ok  - store data
                 //TODO: ADD FLASH WRITE
+                //MAKE SURE TO FILTER OUT BL REGION!
 
+                //wait for next command
+                state = 0;
+                break;
+
+            //send ERASE response
+            case(10 + BOOTLOADER_COMMAND_ERASE):
+                //get len
+                len = uart_getc();
+/*
+                //verify checksum
+                if (checksum != (address[3] ^ address[2] ^ address[1] ^ address[0])) {
+                    //checksum invalid -> abort here
+                    state = 0xFF;
+                    break;
+                }
+
+                //checksum test passed, send ack
+                uart_putc(BOOTLOADER_RESPONSE_ACK);
+
+                //fetch len
+                len      = uart_getc();
+                checksum = len;
+
+                //fetch data
+                data_ptr = &data[0];
+
+                //retrieve N+1 data bytes
+                rx = uart_getc();
+                checksum   ^= rx;
+                *data_ptr++ = rx;
+
+                while(len--) {
+                    rx = uart_getc();
+                    checksum   ^= rx;
+                    *data_ptr++ = rx;
+                }
+
+                //verify checksum
+                rx = uart_getc();
+                if (checksum != rx) {
+                    //checksum invalid -> abort here
+                    state = 0xFF;
+                    break;
+                }
+
+                //checksum ok  - store data
+                //TODO: ADD FLASH WRITE
+                //MAKE SURE TO FILTER OUT BL REGION!
+*/
                 //wait for next command
                 state = 0;
                 break;
