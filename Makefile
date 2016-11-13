@@ -9,6 +9,10 @@ LDFLAGS_FLASH = \
 AS = sdas8051
 ASFLAGS = -plosgff
 
+
+#programmer binary
+CC_TOOL ?= cc-tool
+
 ifdef DEBUG
 CFLAGS += --debug
 endif
@@ -43,3 +47,7 @@ clean:
 	rm -f ivect.rel
 	rm -f $(ADB) $(ASM) $(LNK) $(LST) $(REL) $(RST) $(SYM)
 	rm -f $(TARGET) $(PCDB) $(PLNK) $(PMAP) $(PMEM) $(PAOM)
+
+flash: $(TARGET)
+	$(CC_TOOL) -f -e -w $(TARGET)
+                                              

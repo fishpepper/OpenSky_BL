@@ -10,3 +10,4 @@ Makefile
 delay.c
 delay.h
 dma.h
+device.h

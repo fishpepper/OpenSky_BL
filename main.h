@@ -19,6 +19,4 @@
 //version 1.0
 #define BOOTLOADER_VERSION 0x10
 
-
-
 #endif

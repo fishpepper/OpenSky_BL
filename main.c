@@ -24,6 +24,7 @@
 #include "led.h"
 #include "delay.h"
 #include "dma.h"
+#include "device.h"
 
 DMADesc_t dma_channel_0;
 
@@ -34,24 +35,29 @@ void bootloader_rxc(void) __interrupt URX0_VECTOR {
 }
 
 void bootloader_init_clocks(void) {
-    //turn on both HS oscs (HS XOSC + HS RCOSC)
-    SLEEP &= ~0x04;
-    //wait for completion
-    while(!(SLEEP & 0x40)) {}
+    //power up osc (?)
+    SLEEP &= ~CLOCKSOURCE_OSC_PD_BIT;
 
-    //select HS XOSC
-    CLKCON &= 0xBF;
+    //wait for XOSC stable
+    while(!CLOCKSOURCE_XOSC_STABLE()){}
+    NOP();
+
+    //start crystal osc as HS clocksource, OSC32 is int rc osc
+    CLKCON = 0x80;
+
     //wait for selection to be active
-    while(CLKCON & 0x40) {}
+    while(!CLOCKSOURCE_XOSC_STABLE()){}
+    NOP();
 
-    //turn of HS osc that was not selected as sys clock (here RCOSC)
-    SLEEP |= 0x04;
+    //power down the unused oscillator
+    SLEEP |= CLOCKSOURCE_OSC_PD_BIT;
+
 }
 
 void bootloader_init(void) {
     //show bootloader activity:
-    LED_RED_ON();
-    LED_GREEN_ON();
+    led_red_on();
+    led_green_on();
 
     //set up clocks
     bootloader_init_clocks();
@@ -64,9 +70,6 @@ void bootloader_init(void) {
 
     //set up dma only for ch0
     DMA_SET_ADDR_DESC0(&dma_channel_0)
-
-    //set up uart
-    uart_init();
 }
 
 
@@ -83,6 +86,30 @@ void main(void) {
     led_init();
 
     bootloader_init();
+    uart_init();
+
+    led_green_on();
+    led_red_on();
+
+    /*P0DIR |= (1<<4);
+    P0_4 = 0;
+    while(1){
+    P0_4 = 0;
+    delay_ms(500);
+    P0_4 = 1;
+    delay_ms(500);
+     }*/
+
+    while(1){
+        led_green_off();
+        led_red_off();
+        rx = uart_getc();
+        led_green_on();
+        delay_ms(100);
+        led_green_off();
+        uart_putc('X');
+        delay_ms(50);
+    }
 
     while(1) {
         //do main statemachine

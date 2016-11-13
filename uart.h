@@ -3,19 +3,24 @@
 
 #include <stdint.h>
 
+#define USART0_P0 0
+#define USART0_P1 1
+#define USART1_P0 2
+#define USART1_P1 3
+
 //for a 26MHz Crystal:
 #define CC2510_BAUD_E_115200 12
 #define CC2510_BAUD_E_57600  11
 #define CC2510_BAUD_M_115200 34
 #define CC2510_BAUD_M_57600  34
 
-//use 155200 baud
-#define UART_BAUD_M CC2510_BAUD_M_115200
-#define UART_BAUD_E CC2510_BAUD_E_115200
+//use 57600 baud
+#define UART_BAUD_M CC2510_BAUD_M_57600
+#define UART_BAUD_E CC2510_BAUD_E_57600
 
 void uart_init(void);
 
-union hal_uart_config_t{
+union uart_config_t{
   uint8_t byte;
   struct{
         uint8_t START : 1; //start bit level
