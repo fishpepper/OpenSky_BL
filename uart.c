@@ -128,8 +128,8 @@ void uart_init(void) {
     }
 
     //interrupt prio to 01 (0..3=highest)
-    IP0 |=  (1<<2);
-    IP1 &= ~(1<<2);
+    /*IP0 |=  (1<<2);
+    IP1 &= ~(1<<2);*/
 
     //enable receiver
     UxCSR |= 0x40;
@@ -155,9 +155,9 @@ uint8_t uart_getc(void) {
 
 void uart_putc(uint8_t c) {
     UTXxIF = 0;
-    UxCSR &= ~UxCSR_TX_BYTE;
     UxDBUF = c;
     while (!UTXxIF) {}
+    UTXxIF = 0;
 }
 
 /*

@@ -1,14 +1,16 @@
+BOOTLOADER_SIZE = 0x2000
+
 CC = sdcc
-CFLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include -Wl-bIVECT=0 
+CFLAGS     = -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE) 
+SDCC_FLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include -Wl-bIVECT=0 $(CFLAGS)
 LDFLAGS_FLASH = \
 --out-fmt-ihx \
---code-loc 0x000 --code-size 0x2000 \
+--code-loc 0x000 --code-size $(BOOTLOADER_SIZE) \
 --xram-loc 0xf000 --xram-size 0x7FF \
 --iram-size 0x100
 
 AS = sdas8051
 ASFLAGS = -plosgff
-
 
 #programmer binary
 CC_TOOL ?= cc-tool
@@ -17,7 +19,7 @@ ifdef DEBUG
 CFLAGS += --debug
 endif
 
-SRC = main.c uart.c delay.c
+SRC = main.c uart.c delay.c flash.c
 
 ADB=$(SRC:.c=.adb)
 ASM=$(SRC:.c=.asm)
@@ -36,13 +38,15 @@ PAOM=$(PROGS:.hex=)
 all: $(TARGET)
 
 ivect.rel : ivect.asm
-	$(AS) $(ASFLAGS) $<
+	cpp -P  $(CFLAGS) $< > $<_preprocessed
+	$(AS) $(ASFLAGS) $<_preprocessed
 
 %.rel : %.c
-	$(CC) -c $(CFLAGS) -o$*.rel $<
+	$(CC) -c $(SDCC_FLAGS) -o$*.rel $<
 
 $(TARGET): ivect.rel $(REL) Makefile
-	$(CC) $(LDFLAGS_FLASH) $(CFLAGS) -o $(TARGET)  $(REL) ivect.rel
+	$(CC) $(LDFLAGS_FLASH) $(SDCC_FLAGS) -o $(TARGET)  $(REL) ivect.rel
+
 clean:
 	rm -f ivect.rel
 	rm -f $(ADB) $(ASM) $(LNK) $(LST) $(REL) $(RST) $(SYM)
@@ -50,4 +54,4 @@ clean:
 
 flash: $(TARGET)
 	$(CC_TOOL) -f -e -w $(TARGET)
-                                              
+

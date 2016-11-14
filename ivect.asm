@@ -1,5 +1,5 @@
 ;main application will be moved to the following location:
-APP_OFFSET=0x2000
+APP_OFFSET=BOOTLOADER_SIZE
 
 ;define custom interrupt vector:
     .module ivect
@@ -11,12 +11,12 @@ APP_OFFSET=0x2000
     .ds     5
 
     ;0x000B: ADC end of conversion
-     ljmp 0x000B + APP_OFFSET
+    ljmp 0x000B + APP_OFFSET
     .ds     5
 
     ;0x0013: USART0 RX complete
-    ;ljmp 0x0013 + APP_OFFSET
-    ljmp _bootloader_rxc
+    ljmp 0x0013 + APP_OFFSET
+    ;ljmp _bootloader_rxc
     .ds     5
 
     ;0x001B: USART1 RX complete
@@ -36,8 +36,8 @@ APP_OFFSET=0x2000
     .ds     5
 
     ;0x003B: USART0 TXC
-    ;ljmp 0x003B + APP_OFFSET
-    ljmp _bootloader_txc
+    ljmp 0x003B + APP_OFFSET
+    ;ljmp _bootloader_txc
     .ds     5
 
     ;0x0043: DMA transfer complete

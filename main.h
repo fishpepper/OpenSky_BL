@@ -19,4 +19,8 @@
 //version 1.0
 #define BOOTLOADER_VERSION 0x10
 
+#if ((DEVICE_FLASH_SIZE) > 65535)
+    #error "ERROR: maximum supported flash size is 64k!"
+#endif
+
 #endif
