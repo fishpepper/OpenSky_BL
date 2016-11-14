@@ -36,6 +36,7 @@ union uart_config_t{
 
 uint8_t uart_getc(void);
 void uart_putc(uint8_t c);
+void uart_putc_d(uint8_t c);
 
 /*
 static void hal_uart_set_mode(__xdata union hal_uart_config_t *cfg);

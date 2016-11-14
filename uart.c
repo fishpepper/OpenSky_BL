@@ -16,11 +16,12 @@
 */
 
 #include "uart.h"
+#include "led.h"
 #include "config.h"
 #include "cc25xx.h"
 
 
-#if (BOOTLOADER_UART == USART0_P0) || (BOOTLOADER_UART == USART0_P1)
+/*#if (BOOTLOADER_UART == USART0_P0) || (BOOTLOADER_UART == USART0_P1)
     #define UxBAUD U0BAUD
     #define UxGCR  U0GCR
     #define UxGCR_ORDER U0GCR_ORDER
@@ -30,7 +31,7 @@
     #define UxDBUF U0DBUF
     #define URXxIF URX0IF
     #define UTXxIF UTX0IF
-#else
+#else*/
     #define UxBAUD U1BAUD
     #define UxGCR  U1GCR
     #define UxGCR_ORDER U1GCR_ORDER
@@ -40,7 +41,7 @@
     #define UxDBUF U1DBUF
     #define URXxIF URX1IF
     #define UTXxIF UTX1IF
-#endif
+//#endif
 
 //http://www.ti.com/lit/an/swra222b/swra222b.pdf
 
@@ -74,6 +75,8 @@ void uart_init(void) {
 #elif BOOTLOADER_UART == USART1_P0
     //USART1 use ALT1 -> Clear flag -> P0_4 = TX / P0_5 = RX
     PERCFG &= ~(PERCFG_U1CFG);
+    //USART1 has priority when USART0 is also enabled
+    P2DIR = (P2DIR & 0x3F) | 0b01000000;
 
     //configure pins as peripheral:
     P0SEL |= (1<<4) | (1<<5);
@@ -86,6 +89,8 @@ void uart_init(void) {
 #elif BOOTLOADER_UART == USART1_P1
     //USART1 use ALT2 -> set flag -> P1_6 = TX / P1_7 = RX
     PERCFG  |= (PERCFG_U1CFG);
+    //USART1 has priority when USART0 is also enabled
+    P2DIR = (P2DIR & 0x3F) | 0b01000000;
 
     //configure pins as peripheral:
     P1SEL |= (1<<6) | (1<<7);
@@ -108,8 +113,8 @@ void uart_init(void) {
     uart_config.bit.START  = 0; //startbit level = low
     uart_config.bit.STOP   = 1; //stopbit level = high
     uart_config.bit.SPB    = 0; //1 stopbit
-    uart_config.bit.PARITY = 0; //1 = parity enabled, D9=0 -> even parity
-    uart_config.bit.BIT9   = 0; //8bit
+    uart_config.bit.PARITY = 1; //1 = parity enabled, D9=0 -> even parity
+    uart_config.bit.BIT9   = 1; //8+1 parity bit
     uart_config.bit.D9     = 0; //EVEN parity
     uart_config.bit.FLOW   = 0; //no hw flow control
     uart_config.bit.ORDER  = 0; //lsb first
@@ -138,6 +143,7 @@ void uart_init(void) {
 uint8_t uart_getc(void) {
     uint8_t res = 0;
 
+    led_green_toggle();
 
     //UxCSR |= 0x40;
 
@@ -158,6 +164,14 @@ void uart_putc(uint8_t c) {
     UxDBUF = c;
     while (!UTXxIF) {}
     UTXxIF = 0;
+}
+
+
+void uart_putc_d(uint8_t c) {
+/*    UTXxIF = 0;
+    UxDBUF = c;
+    while (!UTXxIF) {}
+    UTXxIF = 0;*/
 }
 
 /*

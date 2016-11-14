@@ -1,6 +1,7 @@
 #ifndef __LED_H__
 #define __LED_H__
 #include "config.h"
+#include <cc2510fx.h>
 
 //LEDS
 #define LED_GREEN_DIR PORT2DIR(LED_GREEN_PORT)
@@ -19,7 +20,7 @@
 #define led_red_toggle()   { LED_RED_BIT = !LED_RED_BIT; }
 
 //led init routines
-void led_init(void) { led_red_init(); led_green_init(); }
+#define led_init() { led_red_init(); led_green_init(); }
 
 #endif
 

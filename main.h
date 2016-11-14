@@ -5,6 +5,7 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 
 
+#define BOOTLOADER_COMMAND_INIT           0x7F
 #define BOOTLOADER_COMMAND_GET            0x00
 #define BOOTLOADER_COMMAND_GET_VERSION    0x01
 #define BOOTLOADER_COMMAND_GET_ID         0x02

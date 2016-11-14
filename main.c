@@ -74,21 +74,24 @@ uint8_t bootloader_decode_address(uint16_t *address) {
     uint8_t rx;
     uint8_t checksum;
 
-    //as we only accept 16bit addresses we can abort here if
-    //the addresses two higher bytes are not zero
-    //skip checksum xor here as 0 xor 0 = 0
-    if (uart_getc() != 0) { return 0; }
-    if (uart_getc() != 0) { return 0; }
+    //as we only accept 16bit addresses
+    //stm32 uses 0x0800xxyy as address for flash
+    //ignore the first two bytes
+    if (uart_getc() != 0x08) { return 0; }
+    if (uart_getc() != 0x00) { return 0; }
+
+    //prepare checksum
+    checksum = 0x08;
 
     //high byte of 16bit
-    rx       = uart_getc();
-    *address = rx;
-    checksum = rx;
+    rx        = uart_getc();
+    *address  = rx;
+    checksum ^= rx;
 
     //low byte of 16bit
-    rx       = uart_getc();
-    *address = ((*address)<<8) | rx;
-    checksum = rx;
+    rx        = uart_getc();
+    *address  = ((*address)<<8) | rx;
+    checksum ^= rx;
 
     //read address checksum
     rx = uart_getc();
@@ -149,20 +152,29 @@ void main(void) {
         delay_ms(50);
     }
 */
+
     while(1) {
+        //uart_putc_d(state);
         //do main statemachine
         switch(state){
             default:
             case(0):
                 //fetch command byte
                 command = uart_getc();
-                state   = 1;
+                if (command == BOOTLOADER_COMMAND_INIT){
+                    //init sequence, send ack
+                    uart_putc(BOOTLOADER_RESPONSE_ACK);
+                }else{
+                    //real command
+                    state   = 1;
+                }
                 break;
 
             case(1):
                 //check command checksum (inverted)
                 rx = uart_getc();
-                if (rx == ~command){
+                //NOTE: ~x seems to be calculated in uint16_t !
+                if (rx == (command ^ 0xFF)){
                     //fine, valid command -> decode
                     switch(command){
                         //unknown or unsupported command
@@ -187,7 +199,14 @@ void main(void) {
                 }else{
                     //mismatch - this was either a comm error or we are
                     //in the middle of a command, retry with the current byte as cmd byte:
-                    command = rx;
+                    if (rx == BOOTLOADER_COMMAND_INIT){
+                        //init sequence, send ack
+                        uart_putc(BOOTLOADER_RESPONSE_ACK);
+                        state   = 0;
+                    }else{
+                        //real command
+                        command = rx;
+                    }
                 }
                 break;
 
@@ -214,10 +233,10 @@ void main(void) {
             //send GET_ID response
             case(10 + BOOTLOADER_COMMAND_GET_ID):
                 //number of response bytes to follow
-                uart_putc(2);
+                uart_putc(1);
                 //send product id of an F1 chip with the same pagesize (1024)
                 uart_putc(0x04);
-                uart_putc(0x10);
+                uart_putc(0x12);
                 //send ack
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
                 //wait for next command
@@ -253,7 +272,7 @@ void main(void) {
                 checksum = uart_getc();
 
                 //verify checksum
-                if (len != (~checksum)) {
+                if (len != (checksum ^ 0xFF)) {
                     //checksum invalid -> abort here
                     state = 0xFF;
                     break;
