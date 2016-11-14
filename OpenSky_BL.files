@@ -6,8 +6,9 @@ portmacros.h
 ivect.asm
 uart.c
 uart.h
-Makefile
 delay.c
 delay.h
 dma.h
 device.h
+flash.c
+flash.h

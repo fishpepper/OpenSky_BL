@@ -9,10 +9,10 @@
 #define USART1_P1 3
 
 //for a 26MHz Crystal:
-#define CC2510_BAUD_E_115200 12
-#define CC2510_BAUD_E_57600  11
 #define CC2510_BAUD_M_115200 34
+#define CC2510_BAUD_E_115200 12
 #define CC2510_BAUD_M_57600  34
+#define CC2510_BAUD_E_57600  11
 
 //use 57600 baud
 #define UART_BAUD_M CC2510_BAUD_M_57600

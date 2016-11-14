@@ -25,15 +25,15 @@
 #include "delay.h"
 #include "dma.h"
 #include "device.h"
+#include "flash.h"
 
-DMADesc_t dma_channel_0;
-
+/*
 void bootloader_txc(void) __interrupt UTX0_VECTOR {
 }
 
 void bootloader_rxc(void) __interrupt URX0_VECTOR {
 }
-
+*/
 void bootloader_init_clocks(void) {
     //power up osc (?)
     SLEEP &= ~CLOCKSOURCE_OSC_PD_BIT;
@@ -67,9 +67,45 @@ void bootloader_init(void) {
 
     //wait for vcc to stabilize
     delay_ms(50);
+}
 
-    //set up dma only for ch0
-    DMA_SET_ADDR_DESC0(&dma_channel_0)
+
+uint8_t bootloader_decode_address(uint16_t *address) {
+    uint8_t rx;
+    uint8_t checksum;
+
+    //as we only accept 16bit addresses we can abort here if
+    //the addresses two higher bytes are not zero
+    //skip checksum xor here as 0 xor 0 = 0
+    if (uart_getc() != 0) { return 0; }
+    if (uart_getc() != 0) { return 0; }
+
+    //high byte of 16bit
+    rx       = uart_getc();
+    *address = rx;
+    checksum = rx;
+
+    //low byte of 16bit
+    rx       = uart_getc();
+    *address = ((*address)<<8) | rx;
+    checksum = rx;
+
+    //read address checksum
+    rx = uart_getc();
+
+    //verify checksum
+    if (rx != checksum) {
+        //checksum invalid -> abort here
+        return 0;
+    }
+
+    //verify if this is within memory bounds:
+    if ((*address) > (DEVICE_FLASH_SIZE)){
+        return 0;
+    }
+
+    //everything is fine
+    return 1;
 }
 
 
@@ -77,16 +113,18 @@ void main(void) {
     uint8_t state = 0;
     uint8_t command = 0;
     uint8_t rx = 0;
-    uint8_t address[4];
-    __xdata uint8_t data[256];
+    uint16_t address;
+    __xdata uint8_t buf[256];
     uint8_t *data_ptr = 0;
     uint8_t checksum;
     uint8_t len = 0;
+    uint8_t i;
 
     led_init();
 
     bootloader_init();
     uart_init();
+    flash_init();
 
     led_green_on();
     led_red_on();
@@ -99,7 +137,7 @@ void main(void) {
     P0_4 = 1;
     delay_ms(500);
      }*/
-
+/*
     while(1){
         led_green_off();
         led_red_off();
@@ -110,24 +148,24 @@ void main(void) {
         uart_putc('X');
         delay_ms(50);
     }
-
+*/
     while(1) {
         //do main statemachine
         switch(state){
             default:
             case(0):
-                //fetched for command byte
+                //fetch command byte
                 command = uart_getc();
                 state   = 1;
                 break;
 
             case(1):
-                //check nCMD
+                //check command checksum (inverted)
                 rx = uart_getc();
                 if (rx == ~command){
                     //fine, valid command -> decode
                     switch(command){
-                        //unknown/unsupported command
+                        //unknown or unsupported command
                         default:
                             //invalid command, abort
                             state = 0xFF;
@@ -201,21 +239,13 @@ void main(void) {
 
             //send READ_MEMORY response
             case(10 + BOOTLOADER_COMMAND_READ_MEMORY):
-                //read address
-                address[3] = uart_getc();
-                address[2] = uart_getc();
-                address[1] = uart_getc();
-                address[0] = uart_getc();
-                checksum   = uart_getc();
-
-                //verify checksum
-                if (checksum != (address[3] ^ address[2] ^ address[1] ^ address[0])) {
-                    //checksum invalid -> abort here
+                if (!bootloader_decode_address(&address)){
+                    //abort now
                     state = 0xFF;
                     break;
                 }
 
-                //checksum test passed, send ack
+                //addresss is valid, send ack
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
 
                 //fetch data
@@ -233,9 +263,13 @@ void main(void) {
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
 
                 //send flash content, send N+1 bytes!
-                uart_putc(len); //DUMMY DATA FOR NOW!
-                while(len--) {
-                    uart_putc(len); //DUMMY DATA FOR NOW!
+                flash_read(address, buf, len);
+
+                //send len+1 bytes
+                data_ptr = &buf[0];
+                uart_putc(*data_ptr++);
+                while (len--) {
+                    uart_putc(*data_ptr++);
                 }
 
                 //wait for next command
@@ -244,25 +278,20 @@ void main(void) {
 
             //send GO response
             case(10 + BOOTLOADER_COMMAND_GO):
-                //read address
-                address[3] = uart_getc();
-                address[2] = uart_getc();
-                address[1] = uart_getc();
-                address[0] = uart_getc();
-                checksum   = uart_getc();
-
-                //verify checksum
-                if (checksum != (address[3] ^ address[2] ^ address[1] ^ address[0])) {
-                    //checksum invalid -> abort here
+                if (!bootloader_decode_address(&address)){
+                    //abort now
                     state = 0xFF;
                     break;
                 }
 
-                //send ack
+                //addresss is valid, send ack
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
 
                 //now jump to user application given by address
-                //TODO: JUMP TO ADDRESS!
+                //NOTE: once we use ISRs we need to unconfigure the interrupt bits here!
+                __asm
+                ljmp BOOTLOADER_SIZE
+                __endasm;
 
                 //wait for next command
                 state = 0;
@@ -270,21 +299,13 @@ void main(void) {
 
             //send WRITE_MEMORY response
             case(10 + BOOTLOADER_COMMAND_WRITE_MEMORY):
-                //read address
-                address[3] = uart_getc();
-                address[2] = uart_getc();
-                address[1] = uart_getc();
-                address[0] = uart_getc();
-                checksum   = uart_getc();
-
-                //verify checksum
-                if (checksum != (address[3] ^ address[2] ^ address[1] ^ address[0])) {
-                    //checksum invalid -> abort here
+                if (!bootloader_decode_address(&address)){
+                    //abort now
                     state = 0xFF;
                     break;
                 }
 
-                //checksum test passed, send ack
+                //addresss is valid, send ack
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
 
                 //fetch len
@@ -292,17 +313,17 @@ void main(void) {
                 checksum = len;
 
                 //fetch data
-                data_ptr = &data[0];
+                data_ptr = &buf[0];
 
                 //retrieve N+1 data bytes
-                rx = uart_getc();
-                checksum   ^= rx;
+                rx          = uart_getc();
                 *data_ptr++ = rx;
+                checksum   ^= rx;
 
                 while(len--) {
-                    rx = uart_getc();
-                    checksum   ^= rx;
+                    rx          = uart_getc();
                     *data_ptr++ = rx;
+                    checksum   ^= rx;
                 }
 
                 //verify checksum
@@ -314,8 +335,14 @@ void main(void) {
                 }
 
                 //checksum ok  - store data
-                //TODO: ADD FLASH WRITE
-                //MAKE SURE TO FILTER OUT BL REGION!
+                if (!flash_write_data(address, buf, len)) {
+                    //write failed
+                    state = 0xFF;
+                    break;
+                }
+
+                //done
+                uart_putc(BOOTLOADER_RESPONSE_ACK);
 
                 //wait for next command
                 state = 0;
@@ -323,49 +350,57 @@ void main(void) {
 
             //send ERASE response
             case(10 + BOOTLOADER_COMMAND_ERASE):
-                //get len
-                len = uart_getc();
-/*
-                //verify checksum
-                if (checksum != (address[3] ^ address[2] ^ address[1] ^ address[0])) {
-                    //checksum invalid -> abort here
-                    state = 0xFF;
-                    break;
-                }
-
-                //checksum test passed, send ack
-                uart_putc(BOOTLOADER_RESPONSE_ACK);
-
-                //fetch len
+                //get number of pages to be erased
                 len      = uart_getc();
                 checksum = len;
 
-                //fetch data
-                data_ptr = &data[0];
-
-                //retrieve N+1 data bytes
-                rx = uart_getc();
-                checksum   ^= rx;
-                *data_ptr++ = rx;
-
-                while(len--) {
-                    rx = uart_getc();
-                    checksum   ^= rx;
+                if (len == 0xFF) {
+                    //special case, full flash erase
+                    if (uart_getc() == 0x00) {
+                        //valid command, mark all pages to be erased
+                        len = ((DEVICE_FLASH_SIZE) / (DEVICE_FLASH_PAGESIZE));
+                        for (i=0; i<len; i++){
+                            buf[i] = i;
+                        }
+                    } else {
+                        //checksum error, abort
+                        state = 0xFF;
+                        break;
+                    }
+                }else{
+                    //fetch len+1 pages to be erased
+                    data_ptr = &buf[0];
+                    rx          = uart_getc();
                     *data_ptr++ = rx;
+                    checksum   ^= rx;
+
+                    for(i=0; i<len; i++){
+                        rx          = uart_getc();
+                        *data_ptr++ = rx;
+                        checksum   ^= rx;
+                    }
+
+                    //fetch checksum
+                    rx = uart_getc();
+
+                    if (rx != checksum) {
+                        //checksum mismatch, abort
+                        state = 0xFF;
+                        break;
+                    }
                 }
 
-                //verify checksum
-                rx = uart_getc();
-                if (checksum != rx) {
-                    //checksum invalid -> abort here
-                    state = 0xFF;
-                    break;
+                //fine, the len+1 pages to be erased are now in buf[]
+                //execute the erase of len+1 pages
+                data_ptr = &buf[0];
+                if (!flash_erase_page(*data_ptr++)) { state = 0xFF; break;}
+                while(len--) {
+                    if (!flash_erase_page(*data_ptr++)) { state = 0xFF; break;}
                 }
 
-                //checksum ok  - store data
-                //TODO: ADD FLASH WRITE
-                //MAKE SURE TO FILTER OUT BL REGION!
-*/
+                //execute suceeded!
+                uart_putc(BOOTLOADER_RESPONSE_ACK);
+
                 //wait for next command
                 state = 0;
                 break;
