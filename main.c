@@ -378,8 +378,9 @@ void main(void) {
                     if (uart_getc() == 0x00) {
                         //valid command, mark all pages to be erased
                         len = ((DEVICE_FLASH_SIZE) / (DEVICE_FLASH_PAGESIZE));
-                        for (i=0; i<len; i++){
-                            buf[i] = i;
+                        data_ptr = &buf[0];
+                        for (i=((BOOTLOADER_SIZE) / (DEVICE_FLASH_PAGESIZE)); i<len; i++){
+                            *data_ptr++ = i;
                         }
                     } else {
                         //checksum error, abort
