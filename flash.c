@@ -43,7 +43,7 @@ uint8_t flash_erase_page(uint8_t page) {
     }
 
     //deny deletion of bootloader
-    if (page <= ((BOOTLOADER_SIZE) / (DEVICE_FLASH_PAGESIZE))) {
+    if (page < ((BOOTLOADER_SIZE) / (DEVICE_FLASH_PAGESIZE))) {
         return 0;
     }
 
