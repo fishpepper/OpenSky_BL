@@ -1,3 +1,14 @@
+*.bin
+*.rst
+*.user
+*.asm
+*.map
+*.lk
+*_preprocessed
+*.mem
+*.sym
+*.rel
+*.lst
 # Object files
 *.o
 *.ko

@@ -42,7 +42,7 @@ stylecheck: $(HEADER) $(SRC)
 	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
 
 
-ivect.rel : ivect.asm
+ivect.rel : ivect.s
 	cpp -P  $(CFLAGS) $< > $<_preprocessed
 	$(AS) $(ASFLAGS) $<_preprocessed
 
@@ -60,12 +60,7 @@ clean:
 	rm -f $(ADB) $(ASM) $(LNK) $(LST) $(REL) $(RST) $(SYM)
 	rm -f $(TARGET) $(PCDB) $(PLNK) $(PMAP) $(PMEM) $(PAOM)
 
-<<<<<<< HEAD
-flash: $(TARGET)
-	$(CC_TOOL) -f -e -w $(TARGET)
-=======
 flash: $(TARGET).hex
 	$(CC_TOOL) -f -e -w $(TARGET).hex
->>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
 
 .PHONY: stylecheck clean flash
