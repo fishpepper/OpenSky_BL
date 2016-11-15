@@ -17,21 +17,16 @@
     author: fishpepper <AT> gmail.com
 */
 
-#ifndef FLASH_H_
-#define FLASH_H_
 #include <stdint.h>
-
-void flash_init(void);
-void flash_read(uint16_t address, __xdata uint8_t *buf, uint8_t len);
-uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len);
-uint8_t flash_erase_page(uint8_t page);
-
-#if ((DEVICE_FLASH_SIZE) > 65535)
-    #error "ERROR: maximum supported flash size is 64k!"
-#endif  // ((DEVICE_FLASH_SIZE) > 65535)
-
-#define PAGECOUNT_BOOTLOADER ((BOOTLOADER_SIZE) / (DEVICE_FLASH_PAGESIZE))
-#define PAGECOUNT_FLASH      ((DEVICE_FLASH_SIZE) / (DEVICE_FLASH_PAGESIZE))
+#include "../led.h"
+#include "../delay.h"
 
 
-#endif  // FLASH_H_
+void main(void) {
+    led_init();
+
+    while(1){
+        delay_ms(500);
+        led_green_toggle();
+    }
+}

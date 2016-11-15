@@ -20,15 +20,39 @@
 #include "flash.h"
 #include "config.h"
 #include "main.h"
+#include "dma.h"
 #include "device.h"
 #include "cc25xx.h"
 
 __xdata dma_desc_t flash_dma_config;
 
-void flash_init(void) {
-    //flash_dma_config
 
+void flash_init(void) {
+    //cancel _ALL_ ongoing DMA transfers:
+    DMAARM = DMA_ARM_ABORT | 0x1F;
+
+    flash_dma_config.PRIORITY       = DMA_PRI_HIGH;  // high prio
+    flash_dma_config.M8             = DMA_M8_USE_8_BITS;  // irrelevant since we use LEN
+    flash_dma_config.IRQMASK        = DMA_IRQMASK_DISABLE;  // disable ints from this ch
+    flash_dma_config.TRIG           = DMA_TRIG_FLASH;  // use dma flash data write complete trigger
+    flash_dma_config.TMODE          = DMA_TMODE_SINGLE;  // single mode, see datasheet
+    flash_dma_config.WORDSIZE       = DMA_WORDSIZE_BYTE;  // one byte
+    flash_dma_config.VLEN           = DMA_VLEN_USE_LEN;  // use LEN
+    flash_dma_config.SRCINC         = DMA_SRCINC_1;  // set srcinc to 1 byte
+    flash_dma_config.DESTINC        = DMA_DESTINC_0; // fixed, always write to FWDATA
+
+    // set length of transfer in bytes
+    SET_WORD(flash_dma_config.LENH, flash_dma_config.LENL, 0);
+    // set src: address of data to be written
+    SET_WORD(flash_dma_config.SRCADDRH,  flash_dma_config.SRCADDRL,  0);
+    // destination is flash controller data reg
+    SET_WORD(flash_dma_config.DESTADDRH, flash_dma_config.DESTADDRL, &X_FWDATA);
+
+    // Save pointer to the DMA configuration struct into DMA-channel 0
+    // configuration registers
+    SET_WORD(DMA0CFGH, DMA0CFGL, flash_dma_config);
 }
+
 
 // NOTE: this will read len+1 bytes to buffer buf
 void flash_read(uint16_t address, __xdata uint8_t *buf, uint8_t len) {
@@ -42,71 +66,64 @@ void flash_read(uint16_t address, __xdata uint8_t *buf, uint8_t len) {
 }
 
 uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
-    uint8_t loop_counter;
-    uint8_t *data_ptr;
-    __xdata uint8_t * flash_ptr;
+    uint16_t len16;
 
     // make sure not to overwrite bootloader:
     if (address < BOOTLOADER_SIZE) {
-        uart_putc(0xA0);
         return 0;
     }
 
     // make sure not to overwrite beyound valid flash region:
     if ((address + len + 1) >= DEVICE_FLASH_SIZE) {
-        uart_putc(0xA1);
         return 0;
     }
 
-    // wait until flash controller is ready
-    while (FCTL & FCTL_BUSY) {}
+    // write len+1 bytes
+    len16 = ((uint16_t) len) + 1;
+    if (len16 & 1) {
+        // make sure to write even number of bytes
+        len16++;
+    }
 
-    // set up flash write start address
-    FADDRH = ((address / 2) >> 8) & 0xFF;
-    FADDRL = (address / 2) & 0xFF;
+    //cancel _ALL_ ongoing DMA transfers:
+    DMAARM = DMA_ARM_ABORT | 0x1F;
 
-    // configure flash controller for 26mhz clock
-    FWT = 0x2A;
+    // set length of transfer in bytes
+    SET_WORD(flash_dma_config.LENH, flash_dma_config.LENL, len16);
+    //set src: address of data to be written
+    SET_WORD(flash_dma_config.SRCADDRH,  flash_dma_config.SRCADDRL,  buf);
+    //destination is flash controller data reg
+    SET_WORD(flash_dma_config.DESTADDRH, flash_dma_config.DESTADDRL, &X_FWDATA);
 
-    // we have to write len+1 bytes and we have to make sure to alwys write two bytes
-    // calculate number of iterations:
-    loop_counter = (len / 2) + 1;
+    //set up address:
+    SET_WORD(FADDRH, FADDRL, ((uint16_t)address)>>1);
 
-    // prepare read pointer
-    data_ptr = &buf[0];
+    //waiting for the flash controller to be ready
+    while (FCTL & FCTL_BUSY);
 
-    // enable write
-    FCTL |= FCTL_WRITE;
+    //configure flash controller for 26mhz clock
+    FWT = 0x2A; //(21 * 26) / (16);
+
+    //arm the DMA channel, so that a DMA trigger will initiate DMA writing
+    DMAARM = DMA_ARM_CH0;
     NOP();
 
-    // do write loop
-    while (loop_counter--) {
-        FWDATA = *data_ptr++;
-        FWDATA = *data_ptr++;
+    // trigger flash write. this generates a DMA trigger.
+    __asm
+    .even             //IMPORTANT: PLACE THIS ON A 2BYTE BOUNDARY!
+    ORL _FCTL, #0x02; //FCTL |=  FCTL_WRITE
+    NOP
+    __endasm;
 
-        while (FCTL & FCTL_SWBUSY) {}
-    }
+    // wait for dma finish
+    while (!(DMAIRQ & DMAIRQ_DMAIF0)) {}
 
-    // verify write
-    flash_ptr = (__xdata uint8_t *)address;
-    data_ptr  = &buf[0];
+    // wait until flash controller not busy
+    while (FCTL & (FCTL_BUSY | FCTL_SWBUSY)) {}
 
-    if ((*flash_ptr) != (*data_ptr)) {
-        uart_putc(*flash_ptr);
-        uart_putc(*data_ptr);
-        return 0;
-    }
-    flash_ptr++;
-    data_ptr++;
-
-    while (len--) {
-        if ((*flash_ptr) != (*data_ptr)) {
-            uart_putc(0xA3);
-            return 0;
-        }
-        flash_ptr++;
-        data_ptr++;
-    }
+    // by now, the transfer is completed, so the transfer count is reached.
+    // the DMA channel 0 interrupt flag is then set, so we clear it here.
+    DMAIRQ &= ~DMAIRQ_DMAIF0;
 
     return 1;
 }

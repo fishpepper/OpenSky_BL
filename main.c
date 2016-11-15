@@ -114,6 +114,7 @@ void main(void) {
     uint8_t checksum;
     uint8_t len = 0;
     uint8_t i;
+    myfuncptr_t jump_helper;
 
     led_init();
 
@@ -123,27 +124,6 @@ void main(void) {
 
     led_green_on();
     led_red_on();
-
-    /*P0DIR |= (1<<4);
-    P0_4 = 0;
-    while(1){
-    P0_4 = 0;
-    delay_ms(500);
-    P0_4 = 1;
-    delay_ms(500);
-     }*/
-/*
-    while(1){
-        led_green_off();
-        led_red_off();
-        rx = uart_getc();
-        led_green_on();
-        delay_ms(100);
-        led_green_off();
-        uart_putc('X');
-        delay_ms(50);
-    }
-*/
 
     while (1) {
         // uart_putc_d(state);
@@ -300,9 +280,16 @@ void main(void) {
 
                 // now jump to user application given by address
                 // NOTE: once we use ISRs we need to unconfigure the interrupt bits here!
-                __asm
+
+
+                jump_helper = (myfuncptr_t) address;
+                jump_helper();
+               /*goto_loc = address;
+               (*goto_loc)();
+*/
+               /*__asm
                 ljmp BOOTLOADER_SIZE
-                __endasm;
+                __endasm;*/
 
                 // wait for next command
                 state = 0;
@@ -341,7 +328,6 @@ void main(void) {
                 rx = uart_getc();
                 if (checksum != rx) {
                     // checksum invalid -> abort here
-                    uart_putc(0xCC);
                     state = 0xFF;
                     break;
                 }
@@ -349,7 +335,6 @@ void main(void) {
                 // checksum ok  - store data
                 if (!flash_write_data(address, buf, len)) {
                     // write failed
-                    uart_putc(0x33);
                     state = 0xFF;
                     break;
                 }
