@@ -341,6 +341,7 @@ void main(void) {
                 rx = uart_getc();
                 if (checksum != rx) {
                     // checksum invalid -> abort here
+                    uart_putc(0xCC);
                     state = 0xFF;
                     break;
                 }
@@ -348,6 +349,7 @@ void main(void) {
                 // checksum ok  - store data
                 if (!flash_write_data(address, buf, len)) {
                     // write failed
+                    uart_putc(0x33);
                     state = 0xFF;
                     break;
                 }

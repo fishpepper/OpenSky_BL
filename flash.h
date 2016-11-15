@@ -26,6 +26,27 @@ void flash_read(uint16_t address, __xdata uint8_t *buf, uint8_t len);
 uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len);
 uint8_t flash_erase_page(uint8_t page);
 
+//HAL_DMA CONFIG
+//see https://e2e.ti.com/support/wireless_connectivity/f/156/t/16922
+typedef struct {
+    uint8_t SRCADDRH;
+    uint8_t SRCADDRL;
+    uint8_t DESTADDRH;
+    uint8_t DESTADDRL;
+    uint8_t LENH      : 5;
+    uint8_t VLEN      : 3;
+    uint8_t LENL      : 8;
+    uint8_t TRIG      : 5;
+    uint8_t TMODE     : 2;
+    uint8_t WORDSIZE  : 1;
+    uint8_t PRIORITY  : 2;
+    uint8_t M8        : 1;
+    uint8_t IRQMASK   : 1;
+    uint8_t DESTINC   : 2;
+    uint8_t SRCINC    : 2;
+} dma_desc_t;
+
+
 
 #if ((DEVICE_FLASH_SIZE) > 65535)
     #error "ERROR: maximum supported flash size is 64k!"
