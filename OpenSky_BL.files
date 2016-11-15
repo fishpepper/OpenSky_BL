@@ -8,7 +8,7 @@ uart.c
 uart.h
 delay.c
 delay.h
-dma.h
 device.h
 flash.c
 flash.h
+cc25xx.h

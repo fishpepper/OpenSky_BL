@@ -1,4 +1,6 @@
 /*
+    Copyright 2016 fishpepper <AT> gmail.com
+
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -12,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-   author: fishpepper <AT> gmail.com
+    author: fishpepper <AT> gmail.com
 */
 
 #include "uart.h"
@@ -21,7 +23,7 @@
 #include "cc25xx.h"
 
 
-/*#if (BOOTLOADER_UART == USART0_P0) || (BOOTLOADER_UART == USART0_P1)
+#if (BOOTLOADER_UART == USART0_P0) || (BOOTLOADER_UART == USART0_P1)
     #define UxBAUD U0BAUD
     #define UxGCR  U0GCR
     #define UxGCR_ORDER U0GCR_ORDER
@@ -31,7 +33,7 @@
     #define UxDBUF U0DBUF
     #define URXxIF URX0IF
     #define UTXxIF UTX0IF
-#else*/
+#else
     #define UxBAUD U1BAUD
     #define UxGCR  U1GCR
     #define UxGCR_ORDER U1GCR_ORDER
@@ -41,102 +43,96 @@
     #define UxDBUF U1DBUF
     #define URXxIF URX1IF
     #define UTXxIF UTX1IF
-//#endif
-
-//http://www.ti.com/lit/an/swra222b/swra222b.pdf
+#endif  // BOOTLOADER_UART
 
 void uart_init(void) {
     __xdata union uart_config_t uart_config;
 
 #if BOOTLOADER_UART == USART0_P0
-    //USART0 use ALT1 -> Clear flag -> P0_3 = TX / P0_2 = RX
+    // USART0 use ALT1 -> Clear flag -> P0_3 = TX / P0_2 = RX
     PERCFG &= ~(PERCFG_U0CFG);
 
-    //configure pins as peripheral:
+    // configure pins as peripheral:
     P0SEL |= (1<<3) | (1<<2);
 
-    //make sure all P1 pins switch to normal GPIO
+    // make sure all P1 pins switch to normal GPIO
     P1SEL &= ~(0x3C);
 
-    //make tx pin output:
+    // make tx pin output:
     P0DIR |= (1<<3);
 #elif BOOTLOADER_UART == USART0_P1
-    //USART0 use ALT2 -> Set flag -> P1_5 = TX / P1_4 = RX
+    // USART0 use ALT2 -> Set flag -> P1_5 = TX / P1_4 = RX
     PERCFG |= (PERCFG_U0CFG);
 
-    //configure pins as peripheral:
+    // configure pins as peripheral:
     P1SEL |= (1<<5) | (1<<4);
 
-    //make sure all P0 pins switch to normal GPIO
+    // make sure all P0 pins switch to normal GPIO
     P0SEL &= ~(0x3C);
 
-    //make tx pin output:
+    // make tx pin output:
     P1DIR |= (1<<5);
 #elif BOOTLOADER_UART == USART1_P0
-    //USART1 use ALT1 -> Clear flag -> P0_4 = TX / P0_5 = RX
+    // USART1 use ALT1 -> Clear flag -> P0_4 = TX / P0_5 = RX
     PERCFG &= ~(PERCFG_U1CFG);
-    //USART1 has priority when USART0 is also enabled
+    // USART1 has priority when USART0 is also enabled
     P2DIR = (P2DIR & 0x3F) | 0b01000000;
 
-    //configure pins as peripheral:
+    // configure pins as peripheral:
     P0SEL |= (1<<4) | (1<<5);
 
-    //make sure all P1 pins switch to normal GPIO
+    // make sure all P1 pins switch to normal GPIO
     P1SEL &= ~(0xF0);
 
-    //make tx pin output:
+    // make tx pin output:
     P0DIR |= (1<<4);
 #elif BOOTLOADER_UART == USART1_P1
-    //USART1 use ALT2 -> set flag -> P1_6 = TX / P1_7 = RX
+    // USART1 use ALT2 -> set flag -> P1_6 = TX / P1_7 = RX
     PERCFG  |= (PERCFG_U1CFG);
-    //USART1 has priority when USART0 is also enabled
+    // USART1 has priority when USART0 is also enabled
     P2DIR = (P2DIR & 0x3F) | 0b01000000;
 
-    //configure pins as peripheral:
+    // configure pins as peripheral:
     P1SEL |= (1<<6) | (1<<7);
 
-    //make sure all P0 pins switch to normal GPIO
+    // make sure all P0 pins switch to normal GPIO
     P0SEL &= ~(0x3C);
 
-    //make tx pin output:
+    // make tx pin output:
     P1DIR |= (1<<6);
 #else
   #error "ERROR: UNSUPPORTED DEBUG UART"
-#endif
+#endif  // BOOTLOADER_UART
 
-    //this assumes cpu runs from XOSC (26mhz) !
-    //set baudrate
+    // this assumes cpu runs from XOSC (26mhz) !
+    // set baudrate
     UxBAUD = UART_BAUD_M;
     UxGCR = (UxGCR & ~0x1F) | (UART_BAUD_E);
 
-    //set up config
-    uart_config.bit.START  = 0; //startbit level = low
-    uart_config.bit.STOP   = 1; //stopbit level = high
-    uart_config.bit.SPB    = 0; //1 stopbit
-    uart_config.bit.PARITY = 1; //1 = parity enabled, D9=0 -> even parity
-    uart_config.bit.BIT9   = 1; //8+1 parity bit
-    uart_config.bit.D9     = 0; //EVEN parity
-    uart_config.bit.FLOW   = 0; //no hw flow control
-    uart_config.bit.ORDER  = 0; //lsb first
+    // set up config
+    uart_config.bit.START  = 0;  // startbit level = low
+    uart_config.bit.STOP   = 1;  // stopbit level = high
+    uart_config.bit.SPB    = 0;  // 1 stopbit
+    uart_config.bit.PARITY = 1;  // 1 = parity enabled, D9=0 -> even parity
+    uart_config.bit.BIT9   = 1;  // 8+1 parity bit
+    uart_config.bit.D9     = 0;  // EVEN parity
+    uart_config.bit.FLOW   = 0;  // no hw flow control
+    uart_config.bit.ORDER  = 0;  // lsb first
 
-    //enable uart mode
+    // enable uart mode
     UxCSR |= 0x80;
 
-    //store config to UxUCR register
+    // store config to UxUCR register
     UxUCR = uart_config.byte & (0x7F);
 
-    //store config to UxGCR: (msb/lsb)
-    if (uart_config.bit.ORDER){
+    // store config to UxGCR: (msb/lsb)
+    if (uart_config.bit.ORDER) {
         UxGCR |= UxGCR_ORDER;
-    }else{
+    } else {
         UxGCR &= ~UxGCR_ORDER;
     }
 
-    //interrupt prio to 01 (0..3=highest)
-    /*IP0 |=  (1<<2);
-    IP1 &= ~(1<<2);*/
-
-    //enable receiver
+    // enable receiver
     UxCSR |= 0x40;
 }
 
@@ -145,15 +141,13 @@ uint8_t uart_getc(void) {
 
     led_green_toggle();
 
-    //UxCSR |= 0x40;
+    // wait for RX
+    while (!URXxIF) {}
 
-    //wait for RX
-    while(!URXxIF) {}
-
-    //fetch data
+    // fetch data
     res = UxDBUF;
 
-    //clear flag
+    // clear flag
     URXxIF = 0;
 
     return res;
@@ -166,45 +160,3 @@ void uart_putc(uint8_t c) {
     UTXxIF = 0;
 }
 
-
-void uart_putc_d(uint8_t c) {
-/*    UTXxIF = 0;
-    UxDBUF = c;
-    while (!UTXxIF) {}
-    UTXxIF = 0;*/
-}
-
-/*
-void hal_uart_start_transmission(uint8_t ch){
-    //clear flags
-    UTXxIF = 0;
-    UxCSR &= ~UxCSR_TX_BYTE;
-
-    //enable TX int:
-    IEN2 |= (IEN2_UTX0IE);
-
-    //send this char
-    UxDBUF = ch;
-}
-
-static void hal_uart_set_mode(__xdata union hal_uart_config_t *cfg){
-    //enable uart mode
-    UxCSR |= 0x80;
-
-    //store config to UxUCR register
-    UxUCR = cfg->byte & (0x7F);
-
-    //store config to UxGCR: (msb/lsb)
-    if (cfg->bit.ORDER){
-        UxGCR |= UxGCR_ORDER;
-    }else{
-        UxGCR &= ~UxGCR_ORDER;
-    }
-
-    //interrupt prio to 01 (0..3=highest)
-    IP0 |=  (1<<2);
-    IP1 &= ~(1<<2);
-}
-
-
-*/

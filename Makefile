@@ -34,8 +34,13 @@ PLNK=$(PROGS:.hex=.lnk)
 PMAP=$(PROGS:.hex=.map)
 PMEM=$(PROGS:.hex=.mem)
 PAOM=$(PROGS:.hex=)
+HEADER=$(wildcard *.h)
 
-all: $(TARGET)
+all: stylecheck $(TARGET)
+
+stylecheck: $(HEADER) $(SRC)
+	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
+
 
 ivect.rel : ivect.asm
 	cpp -P  $(CFLAGS) $< > $<_preprocessed
@@ -55,3 +60,4 @@ clean:
 flash: $(TARGET)
 	$(CC_TOOL) -f -e -w $(TARGET)
 
+.PHONY: stylecheck clean flash

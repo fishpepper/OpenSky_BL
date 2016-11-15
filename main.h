@@ -1,8 +1,27 @@
-#ifndef __MAIN_H__
-#define __MAIN_H__
+/*
+    Copyright 2016 fishpepper <AT> gmail.com
 
-#define min(a,b) (((a)<(b))?(a):(b))
-#define max(a,b) (((a)>(b))?(a):(b))
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    author: fishpepper <AT> gmail.com
+*/
+
+#ifndef MAIN_H_
+#define MAIN_H_
+
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#define max(a, b) (((a) > (b)) ? (a) : (b))
 
 
 #define BOOTLOADER_COMMAND_INIT           0x7F
@@ -17,11 +36,7 @@
 #define BOOTLOADER_RESPONSE_ACK           0x79
 #define BOOTLOADER_RESPONSE_NACK          0x1F
 
-//version 1.0
+// version 1.0
 #define BOOTLOADER_VERSION 0x10
 
-#if ((DEVICE_FLASH_SIZE) > 65535)
-    #error "ERROR: maximum supported flash size is 64k!"
-#endif
-
-#endif
+#endif  // MAIN_H_

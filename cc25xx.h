@@ -1,5 +1,24 @@
-#ifndef __CC25XX_H__
-#define __CC25XX_H__
+/*
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    author: fishpepper <AT> gmail.com
+*/
+
+#ifndef CC25XX_H_
+#define CC25XX_H_
 #include <stdint.h>
 #include <cc2510fx.h>
 
@@ -17,8 +36,8 @@
 #define IEN0_STIE (1<<5)
 #define IEN0_EA (1<<7)
 
-//bit 7 - unused
-//bit 6 - unused
+// bit 7 - unused
+// bit 6 - unused
 #define PICTL_P2IEN  (1<<5)
 #define PICTL_P0IENH (1<<4)
 #define PICTL_P0IENL (1<<3)
@@ -97,4 +116,4 @@
 #define FCTL_WRITE (1<<1)
 #define FCTL_ERASE (1<<0)
 
-#endif // __CC25XX_H__
+#endif  // CC25XX_H_
