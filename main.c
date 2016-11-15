@@ -341,6 +341,10 @@ void main(void) {
                 rx = uart_getc();
                 if (checksum != rx) {
                     // checksum invalid -> abort here
+<<<<<<< HEAD
+=======
+                    uart_putc(0xCC);
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
                     state = 0xFF;
                     break;
                 }
@@ -348,6 +352,10 @@ void main(void) {
                 // checksum ok  - store data
                 if (!flash_write_data(address, buf, len)) {
                     // write failed
+<<<<<<< HEAD
+=======
+                    uart_putc(0x33);
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
                     state = 0xFF;
                     break;
                 }

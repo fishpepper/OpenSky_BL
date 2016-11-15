@@ -1,4 +1,4 @@
-BOOTLOADER_SIZE = 0x2000
+BOOTLOADER_SIZE = 0x0C00 #use 3kb for bootloader
 
 CC = sdcc
 CFLAGS     = -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE) 
@@ -28,7 +28,7 @@ LST=$(SRC:.c=.lst)
 REL=$(SRC:.c=.rel)
 RST=$(SRC:.c=.rst)
 SYM=$(SRC:.c=.sym)
-TARGET=opensky_cc2510_bl.hex
+TARGET=opensky_cc2510_bl
 PCDB=$(PROGS:.hex=.cdb)
 PLNK=$(PROGS:.hex=.lnk)
 PMAP=$(PROGS:.hex=.map)
@@ -36,7 +36,7 @@ PMEM=$(PROGS:.hex=.mem)
 PAOM=$(PROGS:.hex=)
 HEADER=$(wildcard *.h)
 
-all: stylecheck $(TARGET)
+all: stylecheck $(TARGET).hex
 
 stylecheck: $(HEADER) $(SRC)
 	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
@@ -49,15 +49,23 @@ ivect.rel : ivect.asm
 %.rel : %.c
 	$(CC) -c $(SDCC_FLAGS) -o$*.rel $<
 
-$(TARGET): ivect.rel $(REL) Makefile
-	$(CC) $(LDFLAGS_FLASH) $(SDCC_FLAGS) -o $(TARGET)  $(REL) ivect.rel
+$(TARGET).hex: ivect.rel $(REL) Makefile
+	$(CC) $(LDFLAGS_FLASH) $(SDCC_FLAGS) -o $(TARGET).hex  $(REL) ivect.rel
+
+$(TARGET).bin: $(TARGET).hex
+	objcopy -Iihex -Obinary $(TARGET).hex $(TARGET).bin
 
 clean:
 	rm -f ivect.rel
 	rm -f $(ADB) $(ASM) $(LNK) $(LST) $(REL) $(RST) $(SYM)
 	rm -f $(TARGET) $(PCDB) $(PLNK) $(PMAP) $(PMEM) $(PAOM)
 
+<<<<<<< HEAD
 flash: $(TARGET)
 	$(CC_TOOL) -f -e -w $(TARGET)
+=======
+flash: $(TARGET).hex
+	$(CC_TOOL) -f -e -w $(TARGET).hex
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
 
 .PHONY: stylecheck clean flash

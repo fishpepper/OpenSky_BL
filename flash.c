@@ -23,7 +23,15 @@
 #include "device.h"
 #include "cc25xx.h"
 
+<<<<<<< HEAD
 void flash_init(void) {
+=======
+__xdata dma_desc_t flash_dma_config;
+
+void flash_init(void) {
+    //flash_dma_config
+
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
 }
 
 // NOTE: this will read len+1 bytes to buffer buf
@@ -44,11 +52,19 @@ uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
 
     // make sure not to overwrite bootloader:
     if (address < BOOTLOADER_SIZE) {
+<<<<<<< HEAD
+=======
+        uart_putc(0xA0);
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
         return 0;
     }
 
     // make sure not to overwrite beyound valid flash region:
     if ((address + len + 1) >= DEVICE_FLASH_SIZE) {
+<<<<<<< HEAD
+=======
+        uart_putc(0xA1);
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
         return 0;
     }
 
@@ -56,8 +72,13 @@ uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
     while (FCTL & FCTL_BUSY) {}
 
     // set up flash write start address
+<<<<<<< HEAD
     FADDRH = (address >> 8) & 0xFF;
     FADDRL = address & 0xFF;
+=======
+    FADDRH = ((address / 2) >> 8) & 0xFF;
+    FADDRL = (address / 2) & 0xFF;
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
 
     // configure flash controller for 26mhz clock
     FWT = 0x2A;
@@ -86,6 +107,11 @@ uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
     data_ptr  = &buf[0];
 
     if ((*flash_ptr) != (*data_ptr)) {
+<<<<<<< HEAD
+=======
+        uart_putc(*flash_ptr);
+        uart_putc(*data_ptr);
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
         return 0;
     }
     flash_ptr++;
@@ -93,6 +119,10 @@ uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
 
     while (len--) {
         if ((*flash_ptr) != (*data_ptr)) {
+<<<<<<< HEAD
+=======
+            uart_putc(0xA3);
+>>>>>>> 130cb01cb16afaa9909d41ce7e03d9f84e154ef0
             return 0;
         }
         flash_ptr++;
