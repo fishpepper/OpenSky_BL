@@ -38,6 +38,8 @@
 
 // version 1.0
 #define BOOTLOADER_VERSION 0x10
+#define BOOTLOADER_DEVICE_ID 0x0410
+//#define BOOTLOADER_DEVICE_ID 0x0412
 
 typedef void (*myfuncptr_t)(void);
 

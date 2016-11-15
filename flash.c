@@ -24,6 +24,7 @@
 #include "device.h"
 #include "cc25xx.h"
 
+__xdata uint8_t flash_buffer[258];
 __xdata dma_desc_t flash_dma_config;
 
 
@@ -55,7 +56,8 @@ void flash_init(void) {
 
 
 // NOTE: this will read len+1 bytes to buffer buf
-void flash_read(uint16_t address, __xdata uint8_t *buf, uint8_t len) {
+void flash_read(uint16_t address, uint8_t len) {
+    uint8_t *buf = &flash_buffer[0];
     __xdata uint8_t * flash_ptr = (__xdata uint8_t *)address;
 
     // copy len+1 bytes to buf
@@ -65,7 +67,9 @@ void flash_read(uint16_t address, __xdata uint8_t *buf, uint8_t len) {
     }
 }
 
-uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
+uint8_t flash_write_data(uint16_t address, uint8_t len) {
+    uint16_t i;
+    uint8_t *buf = &flash_buffer[0];
     uint16_t len16;
 
     // make sure not to overwrite bootloader:
@@ -78,10 +82,24 @@ uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
         return 0;
     }
 
+
     // write len+1 bytes
     len16 = ((uint16_t) len) + 1;
+
+    //check if write start is on an uneven address:
+    if (address & 1) {
+        //write to uneven byte address requested, shift data 1 byte to the right
+        for(i = 256; i>0; i--) {
+            flash_buffer[i] = flash_buffer[i-1];
+        }
+        flash_buffer[0] = 0xFF;  // this will not alter flash contents
+        // we now have to write 1 byte more (buf is max 257 now, buf has 258 bytes)
+        len16++;
+    }
+
     if (len16 & 1) {
-        // make sure to write even number of bytes
+        // uneven count - we can only write even number of bytes
+        flash_buffer[len16] = 0xFF;
         len16++;
     }
 
@@ -99,7 +117,7 @@ uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len) {
     SET_WORD(FADDRH, FADDRL, ((uint16_t)address)>>1);
 
     //waiting for the flash controller to be ready
-    while (FCTL & FCTL_BUSY);
+    while (FCTL & FCTL_BUSY) {}
 
     //configure flash controller for 26mhz clock
     FWT = 0x2A; //(21 * 26) / (16);

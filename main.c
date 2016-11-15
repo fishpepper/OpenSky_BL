@@ -64,16 +64,13 @@ void bootloader_init(void) {
 
 uint8_t bootloader_decode_address(uint16_t *address) {
     uint8_t rx;
-    uint8_t checksum;
+    uint8_t checksum = 0;
 
     // as we only accept 16bit addresses
     // stm32 uses 0x0800xxyy as address for flash
     // ignore the first two bytes
-    if (uart_getc() != 0x08) { return 0; }
-    if (uart_getc() != 0x00) { return 0; }
-
-    // prepare checksum
-    checksum = 0x08;
+    checksum ^= uart_getc();
+    checksum ^= uart_getc();
 
     // high byte of 16bit
     rx        = uart_getc();
@@ -109,7 +106,6 @@ void main(void) {
     uint8_t command = 0;
     uint8_t rx = 0;
     uint16_t address;
-    __xdata uint8_t buf[256];
     uint8_t *data_ptr = 0;
     uint8_t checksum;
     uint8_t len = 0;
@@ -207,8 +203,8 @@ void main(void) {
                 // number of response bytes to follow
                 uart_putc(1);
                 // send product id of an F1 chip with the same pagesize (1024)
-                uart_putc(0x04);
-                uart_putc(0x12);
+                uart_putc(BOOTLOADER_DEVICE_ID >> 8);
+                uart_putc(BOOTLOADER_DEVICE_ID & 0xFF);
                 // send ack
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
                 // wait for next command
@@ -254,10 +250,10 @@ void main(void) {
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
 
                 // send flash content, send N+1 bytes!
-                flash_read(address, buf, len);
+                flash_read(address, len);
 
                 // send len+1 bytes
-                data_ptr = &buf[0];
+                data_ptr = &flash_buffer[0];
                 uart_putc(*data_ptr++);
                 while (len--) {
                     uart_putc(*data_ptr++);
@@ -280,16 +276,8 @@ void main(void) {
 
                 // now jump to user application given by address
                 // NOTE: once we use ISRs we need to unconfigure the interrupt bits here!
-
-
                 jump_helper = (myfuncptr_t) address;
                 jump_helper();
-               /*goto_loc = address;
-               (*goto_loc)();
-*/
-               /*__asm
-                ljmp BOOTLOADER_SIZE
-                __endasm;*/
 
                 // wait for next command
                 state = 0;
@@ -311,14 +299,14 @@ void main(void) {
                 checksum = len;
 
                 // fetch data
-                data_ptr = &buf[0];
+                data_ptr = &flash_buffer[0];
 
                 // retrieve N+1 data bytes
                 rx          = uart_getc();
                 *data_ptr++ = rx;
                 checksum   ^= rx;
 
-                while (len--) {
+                for (i=0; i<len; i++) {
                     rx          = uart_getc();
                     *data_ptr++ = rx;
                     checksum   ^= rx;
@@ -333,7 +321,7 @@ void main(void) {
                 }
 
                 // checksum ok  - store data
-                if (!flash_write_data(address, buf, len)) {
+                if (!flash_write_data(address, len)) {
                     // write failed
                     state = 0xFF;
                     break;
@@ -357,9 +345,9 @@ void main(void) {
                     if (uart_getc() == 0x00) {
                         // valid command, mark all pages to be erased
                         len = 0;
-                        data_ptr = &buf[0];
+                        data_ptr = &flash_buffer[0];
                         for (i = PAGECOUNT_BOOTLOADER; i < PAGECOUNT_FLASH; i++) {
-                            buf[len] = i;
+                            flash_buffer[len] = i;
                             len++;
                         }
                     } else {
@@ -369,7 +357,7 @@ void main(void) {
                     }
                 } else {
                     // fetch len+1 pages to be erased
-                    data_ptr = &buf[0];
+                    data_ptr = &flash_buffer[0];
                     rx          = uart_getc();
                     *data_ptr++ = rx;
                     checksum   ^= rx;
@@ -390,9 +378,9 @@ void main(void) {
                     }
                 }
 
-                // fine, the len+1 pages to be erased are now in buf[]
+                // fine, the len+1 pages to be erased are now in flash_buffer[]
                 // execute the erase of len+1 pages
-                data_ptr = &buf[0];
+                data_ptr = &flash_buffer[0];
                 if (!flash_erase_page(*data_ptr++)) { state = 0xFF; break;}
                 while (len--) {
                     if (!flash_erase_page(*data_ptr++)) { state = 0xFF; break;}

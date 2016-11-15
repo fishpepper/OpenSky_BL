@@ -20,8 +20,8 @@
 #ifndef DMA_H_
 #define DMA_H_
 
-//HAL_DMA CONFIG
-//see https://e2e.ti.com/support/wireless_connectivity/f/156/t/16922
+// HAL_DMA CONFIG
+// see https://e2e.ti.com/support/wireless_connectivity/f/156/t/16922
 typedef struct {
     uint8_t SRCADDRH;
     uint8_t SRCADDRL;
@@ -44,11 +44,11 @@ typedef struct {
 #define LO(a)     (uint8_t) ((uint16_t)(a) & 0xFF )
 #define SET_WORD(H, L, val) { (H) = HI(val); (L) = LO(val); }
 
-#define DMA_PRI_LOW                            0x00      // Low, CPU has priority
-#define DMA_PRI_GUARANTEED                     0x01      // Guaranteed, DMA at least every second try
-#define DMA_PRI_HIGH                           0x02      // High, DMA has priority
-#define DMA_PRI_ABSOLUTE                       0x03      // Highest, DMA has priority. Reserved for DMA port access.
-#define DMA_PRI_LOW                            0x00      // Low, CPU has priority
+#define DMA_PRI_LOW            0x00      // Low, CPU has priority
+#define DMA_PRI_GUARANTEED     0x01      // Guaranteed, DMA at least every second try
+#define DMA_PRI_HIGH           0x02      // High, DMA has priority
+#define DMA_PRI_ABSOLUTE       0x03      // Highest, DMA has priority. Reserved for DMA port access.
+#define DMA_PRI_LOW            0x00      // Low, CPU has priority
 
 #define DMA_TRIG_NONE           0   // No trigger, setting DMAREQ.DMAREQx bit starts transfer
 #define DMA_TRIG_PREV           1   // DMA channel is triggered by completion of previous channel
@@ -81,12 +81,12 @@ typedef struct {
 #define DMA_TRIG_ADC_CH7       28   // ADC end of conversion channel 7 in sequence, sample ready
 #define DMA_TRIG_ENC_DW        29   // AES encryption processor requests download input data
 #define DMA_TRIG_ENC_UP        30   // AES encryption processor requests upload output data
-#define DMA_VLEN_USE_LEN                       0x00      // Use LEN for transfer count
-#define DMA_VLEN_FIRST_BYTE_P_1                0x01      // Transfer the number of bytes specified by the first byte +1
-#define DMA_VLEN_FIRST_BYTE                    0x02      // Transfer the number of bytes indicated by the first byte (itself included)
-#define DMA_VLEN_FIRST_BYTE_P_2                0x03      // Transfer the number of bytes specified by the first byte +2
-#define DMA_VLEN_FIRST_BYTE_P_3                0x04      // Transfer the number of bytes specified by the first byte +3
-#define DMA_LEN_MAX                            0xFF      // The maximum length is always decided by the first byte
+#define DMA_VLEN_USE_LEN        0x00      // Use LEN for transfer count
+#define DMA_VLEN_FIRST_BYTE_P_1 0x01      // Transfer the number of bytes specified by the first byte +1
+#define DMA_VLEN_FIRST_BYTE     0x02      // Transfer the number of bytes indicated by the first byte (itself included)
+#define DMA_VLEN_FIRST_BYTE_P_2 0x03      // Transfer the number of bytes specified by the first byte +2
+#define DMA_VLEN_FIRST_BYTE_P_3 0x04      // Transfer the number of bytes specified by the first byte +3
+#define DMA_LEN_MAX             0xFF      // The maximum length is always decided by the first byte
 #define DMA_WORDSIZE_BYTE                      0x00      // Transfer a byte at a time
 #define DMA_WORDSIZE_WORD                      0x01      // Transfer a 16-bit word at a time
 #define DMA_TMODE_SINGLE                       0x00      // Transfer a single byte/word after each DMA trigger

@@ -21,9 +21,11 @@
 #define FLASH_H_
 #include <stdint.h>
 
+extern __xdata uint8_t flash_buffer[258];
+
 void flash_init(void);
-void flash_read(uint16_t address, __xdata uint8_t *buf, uint8_t len);
-uint8_t flash_write_data(uint16_t address, uint8_t *buf, uint8_t len);
+void flash_read(uint16_t address, uint8_t len);
+uint8_t flash_write_data(uint16_t address, uint8_t len);
 uint8_t flash_erase_page(uint8_t page);
 
 #if ((DEVICE_FLASH_SIZE) > 65535)
