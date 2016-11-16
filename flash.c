@@ -24,23 +24,21 @@
 #include "device.h"
 #include "cc25xx.h"
 
-__xdata uint8_t flash_buffer[258];
 __xdata dma_desc_t flash_dma_config;
 
-
 void flash_init(void) {
-    //cancel _ALL_ ongoing DMA transfers:
+    // cancel _ALL_ ongoing DMA transfers:
     DMAARM = DMA_ARM_ABORT | 0x1F;
 
-    flash_dma_config.PRIORITY       = DMA_PRI_HIGH;  // high prio
-    flash_dma_config.M8             = DMA_M8_USE_8_BITS;  // irrelevant since we use LEN
+    flash_dma_config.PRIORITY       = DMA_PRI_HIGH;         // high prio
+    flash_dma_config.M8             = DMA_M8_USE_8_BITS;    // irrelevant since we use LEN
     flash_dma_config.IRQMASK        = DMA_IRQMASK_DISABLE;  // disable ints from this ch
-    flash_dma_config.TRIG           = DMA_TRIG_FLASH;  // use dma flash data write complete trigger
-    flash_dma_config.TMODE          = DMA_TMODE_SINGLE;  // single mode, see datasheet
-    flash_dma_config.WORDSIZE       = DMA_WORDSIZE_BYTE;  // one byte
-    flash_dma_config.VLEN           = DMA_VLEN_USE_LEN;  // use LEN
-    flash_dma_config.SRCINC         = DMA_SRCINC_1;  // set srcinc to 1 byte
-    flash_dma_config.DESTINC        = DMA_DESTINC_0; // fixed, always write to FWDATA
+    flash_dma_config.TRIG           = DMA_TRIG_FLASH;       // use dma data write complete trigger
+    flash_dma_config.TMODE          = DMA_TMODE_SINGLE;     // single mode, see datasheet
+    flash_dma_config.WORDSIZE       = DMA_WORDSIZE_BYTE;    // one byte
+    flash_dma_config.VLEN           = DMA_VLEN_USE_LEN;     // use LEN
+    flash_dma_config.SRCINC         = DMA_SRCINC_1;         // set srcinc to 1 byte
+    flash_dma_config.DESTINC        = DMA_DESTINC_0;        // fixed, always write to FWDATA
 
     // set length of transfer in bytes
     SET_WORD(flash_dma_config.LENH, flash_dma_config.LENL, 0);
@@ -49,87 +47,72 @@ void flash_init(void) {
     // destination is flash controller data reg
     SET_WORD(flash_dma_config.DESTADDRH, flash_dma_config.DESTADDRL, &X_FWDATA);
 
-    // Save pointer to the DMA configuration struct into DMA-channel 0
+    // save pointer to the DMA configuration struct into DMA-channel 0
     // configuration registers
     SET_WORD(DMA0CFGH, DMA0CFGL, flash_dma_config);
 }
 
 
 // NOTE: this will read len+1 bytes to buffer buf
-void flash_read(uint16_t address, uint8_t len) {
-    uint8_t *buf = &flash_buffer[0];
+void flash_read(uint16_t address, __xdata uint8_t *buf, uint16_t len) {
     __xdata uint8_t * flash_ptr = (__xdata uint8_t *)address;
 
-    // copy len+1 bytes to buf
-    *buf++ = *flash_ptr++;
+    // copy len bytes to buf
     while (len--) {
         *buf++ = *flash_ptr++;
     }
 }
 
-uint8_t flash_write_data(uint16_t address, uint8_t len) {
-    uint16_t i;
-    uint8_t *buf = &flash_buffer[0];
-    uint16_t len16;
-
+uint8_t flash_write_data(uint16_t address, __xdata uint8_t *buf, uint16_t len) {
     // make sure not to overwrite bootloader:
     if (address < BOOTLOADER_SIZE) {
         return 0;
     }
 
     // make sure not to overwrite beyound valid flash region:
-    if ((address + len + 1) >= DEVICE_FLASH_SIZE) {
+    if ((address + len) >= DEVICE_FLASH_SIZE) {
         return 0;
     }
 
-
-    // write len+1 bytes
-    len16 = ((uint16_t) len) + 1;
-
-    //check if write start is on an uneven address:
     if (address & 1) {
-        //write to uneven byte address requested, shift data 1 byte to the right
-        for(i = 256; i>0; i--) {
-            flash_buffer[i] = flash_buffer[i-1];
-        }
-        flash_buffer[0] = 0xFF;  // this will not alter flash contents
-        // we now have to write 1 byte more (buf is max 257 now, buf has 258 bytes)
-        len16++;
+        // this should not happen, flash write needs an even start address
+        uart_putc(0xE0);
+        return 0;
     }
 
-    if (len16 & 1) {
-        // uneven count - we can only write even number of bytes
-        flash_buffer[len16] = 0xFF;
-        len16++;
+    if (len & 1) {
+        // this should also not happen, flash write has to write even number of bytes
+        uart_putc(0xE1);
+        return 0;
     }
 
-    //cancel _ALL_ ongoing DMA transfers:
+    // cancel _ALL_ ongoing DMA transfers:
     DMAARM = DMA_ARM_ABORT | 0x1F;
 
     // set length of transfer in bytes
-    SET_WORD(flash_dma_config.LENH, flash_dma_config.LENL, len16);
-    //set src: address of data to be written
+    SET_WORD(flash_dma_config.LENH, flash_dma_config.LENL, len);
+    // set src: address of data to be written
     SET_WORD(flash_dma_config.SRCADDRH,  flash_dma_config.SRCADDRL,  buf);
-    //destination is flash controller data reg
+    // destination is flash controller data reg
     SET_WORD(flash_dma_config.DESTADDRH, flash_dma_config.DESTADDRL, &X_FWDATA);
 
-    //set up address:
+    // set up address:
     SET_WORD(FADDRH, FADDRL, ((uint16_t)address)>>1);
 
-    //waiting for the flash controller to be ready
+    // waiting for the flash controller to be ready
     while (FCTL & FCTL_BUSY) {}
 
-    //configure flash controller for 26mhz clock
-    FWT = 0x2A; //(21 * 26) / (16);
+    // configure flash controller for 26mhz clock
+    FWT = 0x2A;  // (21 * 26) / (16);
 
-    //arm the DMA channel, so that a DMA trigger will initiate DMA writing
+    // arm the DMA channel, so that a DMA trigger will initiate DMA writing
     DMAARM = DMA_ARM_CH0;
     NOP();
 
     // trigger flash write. this generates a DMA trigger.
     __asm
-    .even             //IMPORTANT: PLACE THIS ON A 2BYTE BOUNDARY!
-    ORL _FCTL, #0x02; //FCTL |=  FCTL_WRITE
+    .even              // IMPORTANT: PLACE THIS ON A 2BYTE BOUNDARY!
+    ORL _FCTL, #0x02;  // FCTL |=  FCTL_WRITE
     NOP
     __endasm;
 

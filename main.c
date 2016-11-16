@@ -102,6 +102,7 @@ uint8_t bootloader_decode_address(uint16_t *address) {
 
 
 void main(void) {
+    __xdata uint8_t buffer[256+2];
     uint8_t state = 0;
     uint8_t command = 0;
     uint8_t rx = 0;
@@ -109,6 +110,7 @@ void main(void) {
     uint8_t *data_ptr = 0;
     uint8_t checksum;
     uint8_t len = 0;
+    uint16_t len16 = 0;
     uint8_t i;
     myfuncptr_t jump_helper;
 
@@ -249,11 +251,11 @@ void main(void) {
                 // checksum test passed, send ack
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
 
-                // send flash content, send N+1 bytes!
-                flash_read(address, len);
+                // fetch flash content (len+1 bytes!)
+                flash_read(address, buffer, ((uint16_t) len) + 1);
 
                 // send len+1 bytes
-                data_ptr = &flash_buffer[0];
+                data_ptr = &buffer[0];
                 uart_putc(*data_ptr++);
                 while (len--) {
                     uart_putc(*data_ptr++);
@@ -298,15 +300,26 @@ void main(void) {
                 len      = uart_getc();
                 checksum = len;
 
-                // fetch data
-                data_ptr = &flash_buffer[0];
+                // place to store data
+                data_ptr = &buffer[0];
+
+                // we will have to write len+1 bytes
+                len16 = ((uint16_t) len) + 1;
+
+                // we can only start the write on even addresses
+                if (address & 1) {
+                    // not an even address, add a dummy write of 0xFF to the data:
+                    *data_ptr++ = 0xFF;
+                    len16++;
+                }
+
 
                 // retrieve N+1 data bytes
                 rx          = uart_getc();
                 *data_ptr++ = rx;
                 checksum   ^= rx;
 
-                for (i=0; i<len; i++) {
+                for (i=0; i < len; i++) {
                     rx          = uart_getc();
                     *data_ptr++ = rx;
                     checksum   ^= rx;
@@ -320,8 +333,16 @@ void main(void) {
                     break;
                 }
 
+                // we have to write an even number of bytes as well
+                if (len16 & 1) {
+                    // not even, fix it by appending a dumm write of 0xFF
+                    *data_ptr++ = 0xFF;
+                    len16++;
+                }
+
+
                 // checksum ok  - store data
-                if (!flash_write_data(address, len)) {
+                if (!flash_write_data(address, buffer, len16)) {
                     // write failed
                     state = 0xFF;
                     break;
@@ -345,9 +366,9 @@ void main(void) {
                     if (uart_getc() == 0x00) {
                         // valid command, mark all pages to be erased
                         len = 0;
-                        data_ptr = &flash_buffer[0];
+                        data_ptr = &buffer[0];
                         for (i = PAGECOUNT_BOOTLOADER; i < PAGECOUNT_FLASH; i++) {
-                            flash_buffer[len] = i;
+                            buffer[len] = i;
                             len++;
                         }
                     } else {
@@ -357,7 +378,7 @@ void main(void) {
                     }
                 } else {
                     // fetch len+1 pages to be erased
-                    data_ptr = &flash_buffer[0];
+                    data_ptr = &buffer[0];
                     rx          = uart_getc();
                     *data_ptr++ = rx;
                     checksum   ^= rx;
@@ -378,9 +399,9 @@ void main(void) {
                     }
                 }
 
-                // fine, the len+1 pages to be erased are now in flash_buffer[]
+                // fine, the len+1 pages to be erased are now in buffer[]
                 // execute the erase of len+1 pages
-                data_ptr = &flash_buffer[0];
+                data_ptr = &buffer[0];
                 if (!flash_erase_page(*data_ptr++)) { state = 0xFF; break;}
                 while (len--) {
                     if (!flash_erase_page(*data_ptr++)) { state = 0xFF; break;}

@@ -81,37 +81,37 @@ typedef struct {
 #define DMA_TRIG_ADC_CH7       28   // ADC end of conversion channel 7 in sequence, sample ready
 #define DMA_TRIG_ENC_DW        29   // AES encryption processor requests download input data
 #define DMA_TRIG_ENC_UP        30   // AES encryption processor requests upload output data
-#define DMA_VLEN_USE_LEN        0x00      // Use LEN for transfer count
-#define DMA_VLEN_FIRST_BYTE_P_1 0x01      // Transfer the number of bytes specified by the first byte +1
-#define DMA_VLEN_FIRST_BYTE     0x02      // Transfer the number of bytes indicated by the first byte (itself included)
-#define DMA_VLEN_FIRST_BYTE_P_2 0x03      // Transfer the number of bytes specified by the first byte +2
-#define DMA_VLEN_FIRST_BYTE_P_3 0x04      // Transfer the number of bytes specified by the first byte +3
-#define DMA_LEN_MAX             0xFF      // The maximum length is always decided by the first byte
-#define DMA_WORDSIZE_BYTE                      0x00      // Transfer a byte at a time
-#define DMA_WORDSIZE_WORD                      0x01      // Transfer a 16-bit word at a time
-#define DMA_TMODE_SINGLE                       0x00      // Transfer a single byte/word after each DMA trigger
-#define DMA_TMODE_BLOCK                        0x01      // Transfer block of data (length len) after each DMA trigger
-#define DMA_TMODE_SINGLE_REPEATED              0x02      // Transfer single byte/word (after len transfers, rearm DMA)
-#define DMA_TMODE_BLOCK_REPEATED               0x03      // Transfer block of data (after len transfers, rearm DMA)
+#define DMA_VLEN_USE_LEN        0x00  // Use LEN for transfer count
+#define DMA_VLEN_FIRST_BYTE_P_1 0x01  // tx the nr of bytes specified by the 1st byte +1
+#define DMA_VLEN_FIRST_BYTE     0x02  // tx the nr of bytes indicated by the 1st byte (itself incl.)
+#define DMA_VLEN_FIRST_BYTE_P_2 0x03  // tx the nr of bytes specified by the 1st byte +2
+#define DMA_VLEN_FIRST_BYTE_P_3 0x04  // tx the nr of bytes specified by the 1st byte +3
+#define DMA_LEN_MAX             0xFF  // The maximum length is always decided by the 1st byte
+#define DMA_WORDSIZE_BYTE       0x00  // tx a byte at a time
+#define DMA_WORDSIZE_WORD       0x01  // tx a 16-bit word at a time
+#define DMA_TMODE_SINGLE        0x00  // tx a single byte/word after each DMA trigger
+#define DMA_TMODE_BLOCK         0x01  // tx block of data (length len) after each DMA trigger
+#define DMA_TMODE_SINGLE_REPEATED  0x02  // tx single byte/word (after len transfers, rearm DMA)
+#define DMA_TMODE_BLOCK_REPEATED   0x03  // tx block of data (after len transfers, rearm DMA)
 
 #define DMA_ARM_ABORT 0x80
 #define DMA_ARM_CH0 (1<<0)
 
-#define DMA_SRCINC_0                           0x00      // Increment source pointer by 0 bytes/words after each transfer
-#define DMA_SRCINC_1                           0x01      // Increment source pointer by 1 bytes/words after each transfer
-#define DMA_SRCINC_2                           0x02      // Increment source pointer by 2 bytes/words after each transfer
-#define DMA_SRCINC_M1                          0x03      // Decrement source pointer by 1 bytes/words after each transfer
+#define DMA_SRCINC_0      0x00  // Increment source pointer by 0 bytes/words after each transfer
+#define DMA_SRCINC_1      0x01  // Increment source pointer by 1 bytes/words after each transfer
+#define DMA_SRCINC_2      0x02  // Increment source pointer by 2 bytes/words after each transfer
+#define DMA_SRCINC_M1     0x03  // Decrement source pointer by 1 bytes/words after each transfer
 
-#define DMA_DESTINC_0                          0x00      // Increment destination pointer by 0 bytes/words after each transfer
-#define DMA_DESTINC_1                          0x01      // Increment destination pointer by 1 bytes/words after each transfer
-#define DMA_DESTINC_2                          0x02      // Increment destination pointer by 2 bytes/words after each transfer
-#define DMA_DESTINC_M1                         0x03      // Decrement destination pointer by 1 bytes/words after each transfer
+#define DMA_DESTINC_0     0x00  // Increment dest pointer by 0 bytes/words after each transfer
+#define DMA_DESTINC_1     0x01  // Increment dest pointer by 1 bytes/words after each transfer
+#define DMA_DESTINC_2     0x02  // Increment dest pointer by 2 bytes/words after each transfer
+#define DMA_DESTINC_M1    0x03  // Decrement dest pointer by 1 bytes/words after each transfer
 
-#define DMA_IRQMASK_DISABLE                    0x00      // Disable interrupt generation
-#define DMA_IRQMASK_ENABLE                     0x01      // Enable interrupt generation upon DMA channel done
+#define DMA_IRQMASK_DISABLE    0x00  // Disable interrupt generation
+#define DMA_IRQMASK_ENABLE     0x01  // Enable interrupt generation upon DMA channel done
 
-#define DMA_M8_USE_8_BITS                      0x00      // Use all 8 bits for transfer count
-#define DMA_M8_USE_7_BITS                      0x01      // Use 7 LSB for transfer count
+#define DMA_M8_USE_8_BITS      0x00  // Use all 8 bits for transfer count
+#define DMA_M8_USE_7_BITS      0x01  // Use 7 LSB for transfer count
 
 #define DMAIRQ_DMAIF0 (1<<0)
 #define DMAIRQ_DMAIF1 (1<<1)
