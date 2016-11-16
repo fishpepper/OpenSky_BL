@@ -309,6 +309,7 @@ void main(void) {
                 // we can only start the write on even addresses
                 if (address & 1) {
                     // not an even address, add a dummy write of 0xFF to the data:
+                    address--;
                     *data_ptr++ = 0xFF;
                     len16++;
                 }

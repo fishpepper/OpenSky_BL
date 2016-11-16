@@ -76,13 +76,11 @@ uint8_t flash_write_data(uint16_t address, __xdata uint8_t *buf, uint16_t len) {
 
     if (address & 1) {
         // this should not happen, flash write needs an even start address
-        uart_putc(0xE0);
         return 0;
     }
 
     if (len & 1) {
         // this should also not happen, flash write has to write even number of bytes
-        uart_putc(0xE1);
         return 0;
     }
 

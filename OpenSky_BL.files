@@ -13,3 +13,4 @@ flash.c
 flash.h
 cc25xx.h
 dma.h
+ivect.s

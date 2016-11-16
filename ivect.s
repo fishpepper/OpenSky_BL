@@ -68,7 +68,7 @@ APP_OFFSET=BOOTLOADER_SIZE
 
     ;0x0053: Timer 2 (MAC Timer) overflow
     ljmp 0x0053 + APP_OFFSET
-    .ds     7
+    .ds     5
 
     ;0x005B: Timer 3 (8-bit) capture/compare/overflow
     ljmp 0x005B + APP_OFFSET
