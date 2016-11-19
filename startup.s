@@ -31,7 +31,7 @@ __start__stack:
 ;--------------------------------------------------------
 ; custom interrupt vector -> redirect all isrs 
 ;--------------------------------------------------------
-    .area VECTOR    (CODE)
+    .area VECTOR    (ABS, CODE)
     .globl __interrupt_vect
 __interrupt_vect:
     ljmp __sdcc_gsinit_startup
@@ -107,42 +107,13 @@ __interrupt_vect:
     ;0x008B: Watchdog overflow in timer mode
     ljmp #(0x008B + APP_OFFSET)
 
-
-;--------------------------------------------------------
-; external initialized ram data
-;--------------------------------------------------------
-    .area XISEG   (XDATA)
-    .area HOME    (CODE)
-    .area GSINIT0 (CODE)
-    .area GSINIT1 (CODE)
-    .area GSINIT2 (CODE)
-    .area GSINIT3 (CODE)
-    .area GSINIT4 (CODE)
-    .area GSINIT5 (CODE)
-    .area GSINIT  (CODE)
-    .area GSFINAL (CODE)
-    .area CSEG    (CODE)
-
-;--------------------------------------------------------
-; global & static initialisations
-;--------------------------------------------------------
-	
-    .area GSINIT  (CODE)
-    .globl __sdcc_gsinit_startup
-    .globl __sdcc_program_startup
     .globl __start__stack
-    .globl __mcs51_genXINIT
-    .globl __mcs51_genXRAMCLEAR
-    .globl __mcs51_genRAMCLEAR
+    .area GSINIT0 (CODE)
+
+__sdcc_gsinit_startup:
+    mov     sp,#__start__stack - 1
+
     .area GSFINAL (CODE)
-    .globl __sdcc_program_startup
-    ljmp __sdcc_program_startup
-;--------------------------------------------------------
-; Home
-;--------------------------------------------------------
-     .area HOME    (CODE)
-     .area HOME    (CODE)
-__sdcc_program_startup:
-    lcall	_bootloader_main
+    ljmp    _bootloader_main
     ;return from main will lock up
     sjmp .
