@@ -26,12 +26,12 @@ void flash_read(uint16_t address, __xdata uint8_t *buf, uint16_t len);
 uint8_t flash_write_data(uint16_t address, __xdata uint8_t *buf, uint16_t len);
 uint8_t flash_erase_page(uint8_t page);
 
-#if ((DEVICE_FLASH_SIZE) > 65535)
+#if ((FLASH_SIZE) > 65535)
     #error "ERROR: maximum supported flash size is 64k!"
 #endif  // ((DEVICE_FLASH_SIZE) > 65535)
 
-#define PAGECOUNT_BOOTLOADER ((BOOTLOADER_SIZE) / (DEVICE_FLASH_PAGESIZE))
-#define PAGECOUNT_FLASH      ((DEVICE_FLASH_SIZE) / (DEVICE_FLASH_PAGESIZE))
+#define PAGECOUNT_BOOTLOADER ((BOOTLOADER_SIZE) / (FLASH_PAGESIZE))
+#define PAGECOUNT_FLASH      ((FLASH_SIZE) / (FLASH_PAGESIZE))
 
 
 #endif  // FLASH_H_

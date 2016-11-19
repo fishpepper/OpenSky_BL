@@ -92,7 +92,7 @@ uint8_t bootloader_decode_address(uint16_t *address) {
     }
 
     // verify if this is within memory bounds:
-    if ((*address) > (DEVICE_FLASH_SIZE)) {
+    if ((*address) > (FLASH_SIZE)) {
         return 0;
     }
 

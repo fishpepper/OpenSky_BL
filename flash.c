@@ -70,7 +70,7 @@ uint8_t flash_write_data(uint16_t address, __xdata uint8_t *buf, uint16_t len) {
     }
 
     // make sure not to overwrite beyound valid flash region:
-    if ((address + len) >= DEVICE_FLASH_SIZE) {
+    if ((address + len) >= FLASH_SIZE) {
         return 0;
     }
 

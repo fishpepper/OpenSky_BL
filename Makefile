@@ -1,7 +1,10 @@
 BOOTLOADER_SIZE = 0x0C00 #use 3kb for bootloader
 
+FLASH_SIZE     ?= 0x4000     #default to 16k flash
+FLASH_PAGESIZE ?= 0x400 #1k page size for all targets
+
 CC = sdcc
-CFLAGS     = -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE) 
+CFLAGS     = -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE) -DFLASH_SIZE=$(FLASH_SIZE) -DFLASH_PAGESIZE=$(FLASH_PAGESIZE)
 SDCC_FLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include $(CFLAGS)
 LDFLAGS_FLASH = \
 --out-fmt-ihx \
@@ -18,6 +21,8 @@ CC_TOOL ?= cc-tool
 ifdef DEBUG
 CFLAGS += --debug
 endif
+
+STYLECHECKTOOT ?= 
 
 SRC = main.c uart.c delay.c flash.c
 
@@ -39,7 +44,7 @@ HEADER=$(wildcard *.h)
 all: stylecheck $(TARGET).hex
 
 stylecheck: $(HEADER) $(SRC)
-	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
+	./stylecheck/cpplint.py --root=$(STYLECHECKROOT) --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
 
 
 startup.rel : startup.s
