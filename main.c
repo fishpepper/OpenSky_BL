@@ -101,7 +101,7 @@ uint8_t bootloader_decode_address(uint16_t *address) {
 }
 
 
-void main(void) {
+void bootloader_main(void) {
     __xdata uint8_t buffer[256+2];
     uint8_t state = 0;
     uint8_t command = 0;

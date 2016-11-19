@@ -2,7 +2,7 @@ BOOTLOADER_SIZE = 0x0C00 #use 3kb for bootloader
 
 CC = sdcc
 CFLAGS     = -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE) 
-SDCC_FLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include -Wl-bIVECT=0 $(CFLAGS)
+SDCC_FLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include $(CFLAGS)
 LDFLAGS_FLASH = \
 --out-fmt-ihx \
 --code-loc 0x000 --code-size $(BOOTLOADER_SIZE) \
@@ -42,21 +42,21 @@ stylecheck: $(HEADER) $(SRC)
 	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
 
 
-ivect.rel : ivect.s
+startup.rel : startup.s
 	cpp -P  $(CFLAGS) $< > $<_preprocessed
 	$(AS) $(ASFLAGS) $<_preprocessed
 
 %.rel : %.c
 	$(CC) -c $(SDCC_FLAGS) -o$*.rel $<
 
-$(TARGET).hex: ivect.rel $(REL) Makefile
-	$(CC) $(LDFLAGS_FLASH) $(SDCC_FLAGS) -o $(TARGET).hex  $(REL) ivect.rel
+$(TARGET).hex: startup.rel $(REL) Makefile
+	$(CC) $(LDFLAGS_FLASH) $(SDCC_FLAGS) -o $(TARGET).hex  $(REL) startup.rel
 
 $(TARGET).bin: $(TARGET).hex
 	objcopy -Iihex -Obinary $(TARGET).hex $(TARGET).bin
 
 clean:
-	rm -f ivect.rel
+	rm -f startup.rel
 	rm -f $(ADB) $(ASM) $(LNK) $(LST) $(REL) $(RST) $(SYM)
 	rm -f $(TARGET) $(PCDB) $(PLNK) $(PMAP) $(PMEM) $(PAOM)
 
