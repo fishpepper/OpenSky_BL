@@ -21,11 +21,6 @@
 
 #include <stdint.h>
 
-#define USART0_P0 0
-#define USART0_P1 1
-#define USART1_P0 2
-#define USART1_P1 3
-
 // for a 26MHz Crystal:
 #define CC2510_BAUD_M_115200 34
 #define CC2510_BAUD_E_115200 12

@@ -10,6 +10,10 @@ CFLAGS     = -DBOOTLOADER_SIZE=$(BOOTLOADER_SIZE)
 CFLAGS    += -DFLASH_SIZE=$(FLASH_SIZE)
 CFLAGS    += -DFLASH_PAGESIZE=$(FLASH_PAGESIZE)
 
+#allow a custom config file to be passed
+CONFIG_INCLUDE_DIR ?= default_config
+CFLAGS += -I $(CONFIG_INCLUDE_DIR)
+
 SDCC_FLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include $(CFLAGS)
 LDFLAGS_FLASH = \
 --out-fmt-ihx \

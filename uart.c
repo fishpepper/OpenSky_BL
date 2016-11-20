@@ -18,12 +18,12 @@
 */
 
 #include "uart.h"
-#include "led.h"
 #include "config.h"
+#include "led.h"
 #include "cc25xx.h"
 
 
-#if (BOOTLOADER_UART == USART0_P0) || (BOOTLOADER_UART == USART0_P1)
+#if (BOOTLOADER_UART_NUM == 0)
     #define UxBAUD U0BAUD
     #define UxGCR  U0GCR
     #define UxGCR_ORDER U0GCR_ORDER
@@ -48,8 +48,9 @@
 void uart_init(void) {
     __xdata union uart_config_t uart_config;
 
-#if BOOTLOADER_UART == USART0_P0
-    // USART0 use ALT1 -> Clear flag -> P0_3 = TX / P0_2 = RX
+#if (BOOTLOADER_UART_NUM == 0) && (BOOTLOADER_UART_PORT == 0)
+    // -> USART0_P0
+    //    use ALT1 -> Clear flag -> P0_3 = TX / P0_2 = RX
     PERCFG &= ~(PERCFG_U0CFG);
 
     // configure pins as peripheral:
@@ -60,8 +61,9 @@ void uart_init(void) {
 
     // make tx pin output:
     P0DIR |= (1<<3);
-#elif BOOTLOADER_UART == USART0_P1
-    // USART0 use ALT2 -> Set flag -> P1_5 = TX / P1_4 = RX
+#elif (BOOTLOADER_UART_NUM == 0) && (BOOTLOADER_UART_PORT == 1)
+    // -> USART0_P1
+    //    use ALT2 -> Set flag -> P1_5 = TX / P1_4 = RX
     PERCFG |= (PERCFG_U0CFG);
 
     // configure pins as peripheral:
@@ -72,8 +74,9 @@ void uart_init(void) {
 
     // make tx pin output:
     P1DIR |= (1<<5);
-#elif BOOTLOADER_UART == USART1_P0
-    // USART1 use ALT1 -> Clear flag -> P0_4 = TX / P0_5 = RX
+#elif (BOOTLOADER_UART_NUM == 1) && (BOOTLOADER_UART_PORT == 0)
+    // -> USART1_P0
+    //    use ALT1 -> Clear flag -> P0_4 = TX / P0_5 = RX
     PERCFG &= ~(PERCFG_U1CFG);
     // USART1 has priority when USART0 is also enabled
     P2DIR = (P2DIR & 0x3F) | 0b01000000;
@@ -86,8 +89,9 @@ void uart_init(void) {
 
     // make tx pin output:
     P0DIR |= (1<<4);
-#elif BOOTLOADER_UART == USART1_P1
-    // USART1 use ALT2 -> set flag -> P1_6 = TX / P1_7 = RX
+#elif (BOOTLOADER_UART_NUM == 1) && (BOOTLOADER_UART_PORT == 1)
+    // -> USART1_P1
+    //    use ALT2 -> set flag -> P1_6 = TX / P1_7 = RX
     PERCFG  |= (PERCFG_U1CFG);
     // USART1 has priority when USART0 is also enabled
     P2DIR = (P2DIR & 0x3F) | 0b01000000;
@@ -102,7 +106,7 @@ void uart_init(void) {
     P1DIR |= (1<<6);
 #else
   #error "ERROR: UNSUPPORTED DEBUG UART"
-#endif  // BOOTLOADER_UART
+#endif  // BOOTLOADER_UART_*
 
     // this assumes cpu runs from XOSC (26mhz) !
     // set baudrate

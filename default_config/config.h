@@ -16,17 +16,16 @@
 
     author: fishpepper <AT> gmail.com
 */
-#ifndef CONFIG_H_
-#define CONFIG_H_
+#ifndef CONFIG_DEFAULT_CONFIG_H_
+#define CONFIG_DEFAULT_CONFIG_H_
 
-#include "portmacros.h"
-#include "uart.h"
+// use defaults
+#define BOOTLOADER_LED_GREEN_PORT P2
+#define BOOTLOADER_LED_GREEN_PIN  4
+#define BOOTLOADER_LED_RED_PORT P2
+#define BOOTLOADER_LED_RED_PIN  3
+ 
+#define BOOTLOADER_UART_NUM  1
+#define BOOTLOADER_UART_PORT 0
 
-#define LED_GREEN_PORT P2
-#define LED_GREEN_PIN  4
-#define LED_RED_PORT P2
-#define LED_RED_PIN  3
-
-#define BOOTLOADER_UART USART1_P0
-
-#endif  // CONFIG_H_
+#endif  // CONFIG_DEFAULT_CONFIG_H_

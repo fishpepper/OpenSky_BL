@@ -19,23 +19,24 @@
 
 #ifndef LED_H_
 #define LED_H_
-#include "config.h"
 #include <cc2510fx.h>
+#include "portmacros.h"
+#include "config.h"
 
-#define LED_GREEN_DIR PORT2DIR(LED_GREEN_PORT)
-#define LED_RED_DIR   PORT2DIR(LED_RED_PORT)
-#define LED_RED_BIT PORT2BIT(LED_RED_PORT, LED_RED_PIN)
-#define LED_GREEN_BIT PORT2BIT(LED_GREEN_PORT, LED_GREEN_PIN)
+#define BOOTLOADER_LED_GREEN_DIR PORT2DIR(BOOTLOADER_LED_GREEN_PORT)
+#define BOOTLOADER_LED_RED_DIR   PORT2DIR(BOOTLOADER_LED_RED_PORT)
+#define BOOTLOADER_LED_RED_BIT   PORT2BIT(BOOTLOADER_LED_RED_PORT, BOOTLOADER_LED_RED_PIN)
+#define BOOTLOADER_LED_GREEN_BIT PORT2BIT(BOOTLOADER_LED_GREEN_PORT, BOOTLOADER_LED_GREEN_PIN)
 
-#define led_green_init() { LED_GREEN_DIR |= (1 << LED_GREEN_PIN); led_green_off(); }
-#define led_green_on()  { LED_GREEN_BIT = 1; }
-#define led_green_off() { LED_GREEN_BIT = 0; }
-#define led_green_toggle()  { LED_GREEN_BIT = !LED_GREEN_BIT; }
+#define led_green_init() { BOOTLOADER_LED_GREEN_DIR |= (1 << BOOTLOADER_LED_GREEN_PIN); led_green_off(); }
+#define led_green_on()  { BOOTLOADER_LED_GREEN_BIT = 1; }
+#define led_green_off() { BOOTLOADER_LED_GREEN_BIT = 0; }
+#define led_green_toggle()  { BOOTLOADER_LED_GREEN_BIT = !BOOTLOADER_LED_GREEN_BIT; }
 
-#define led_red_init()  { LED_RED_DIR |= (1 << LED_RED_PIN); led_red_off(); }
-#define led_red_on()    { LED_RED_BIT = 1; }
-#define led_red_off()   { LED_RED_BIT = 0; }
-#define led_red_toggle()   { LED_RED_BIT = !LED_RED_BIT; }
+#define led_red_init()  { BOOTLOADER_LED_RED_DIR |= (1 << BOOTLOADER_LED_RED_PIN); led_red_off(); }
+#define led_red_on()    { BOOTLOADER_LED_RED_BIT = 1; }
+#define led_red_off()   { BOOTLOADER_LED_RED_BIT = 0; }
+#define led_red_toggle()   { BOOTLOADER_LED_RED_BIT = !BOOTLOADER_LED_RED_BIT; }
 
 // led init routines
 #define led_init() { led_red_init(); led_green_init(); }
