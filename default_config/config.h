@@ -16,8 +16,8 @@
 
     author: fishpepper <AT> gmail.com
 */
-#ifndef CONFIG_DEFAULT_CONFIG_H_
-#define CONFIG_DEFAULT_CONFIG_H_
+#ifndef DEFAULT_CONFIG_CONFIG_H_
+#define DEFAULT_CONFIG_CONFIG_H_
 
 // use defaults
 #define BOOTLOADER_LED_GREEN_PORT P2
@@ -28,4 +28,4 @@
 #define BOOTLOADER_UART_NUM  1
 #define BOOTLOADER_UART_PORT 0
 
-#endif  // CONFIG_DEFAULT_CONFIG_H_
+#endif  // DEFAULT_CONFIG_CONFIG_H_

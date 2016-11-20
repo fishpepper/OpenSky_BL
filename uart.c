@@ -48,7 +48,7 @@
 void uart_init(void) {
     __xdata union uart_config_t uart_config;
 
-#if (BOOTLOADER_UART_NUM == 0) && (BOOTLOADER_UART_PORT == 0)
+#if ((BOOTLOADER_UART_NUM) == 0) && ((BOOTLOADER_UART_PORT) == 0)
     // -> USART0_P0
     //    use ALT1 -> Clear flag -> P0_3 = TX / P0_2 = RX
     PERCFG &= ~(PERCFG_U0CFG);
@@ -61,7 +61,7 @@ void uart_init(void) {
 
     // make tx pin output:
     P0DIR |= (1<<3);
-#elif (BOOTLOADER_UART_NUM == 0) && (BOOTLOADER_UART_PORT == 1)
+#elif((BOOTLOADER_UART_NUM) == 0) && ((BOOTLOADER_UART_PORT) == 1)
     // -> USART0_P1
     //    use ALT2 -> Set flag -> P1_5 = TX / P1_4 = RX
     PERCFG |= (PERCFG_U0CFG);
@@ -74,7 +74,7 @@ void uart_init(void) {
 
     // make tx pin output:
     P1DIR |= (1<<5);
-#elif (BOOTLOADER_UART_NUM == 1) && (BOOTLOADER_UART_PORT == 0)
+#elif((BOOTLOADER_UART_NUM) == 1) && ((BOOTLOADER_UART_PORT) == 0)
     // -> USART1_P0
     //    use ALT1 -> Clear flag -> P0_4 = TX / P0_5 = RX
     PERCFG &= ~(PERCFG_U1CFG);
@@ -89,7 +89,7 @@ void uart_init(void) {
 
     // make tx pin output:
     P0DIR |= (1<<4);
-#elif (BOOTLOADER_UART_NUM == 1) && (BOOTLOADER_UART_PORT == 1)
+#elif((BOOTLOADER_UART_NUM) == 1) && ((BOOTLOADER_UART_PORT) == 1)
     // -> USART1_P1
     //    use ALT2 -> set flag -> P1_6 = TX / P1_7 = RX
     PERCFG  |= (PERCFG_U1CFG);

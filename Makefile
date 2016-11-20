@@ -59,7 +59,7 @@ stylecheck: $(HEADER) $(SRC)
 		--extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
 
 startup.rel : startup.s
-	cpp -P  $(CFLAGS) $< > $<_preprocessed
+	@cpp -P  $(CFLAGS) $< > $<_preprocessed
 	$(AS) $(ASFLAGS) $<_preprocessed
 
 %.rel : %.c
@@ -69,12 +69,13 @@ $(TARGET).hex: startup.rel $(REL) Makefile
 	$(CC) $(LDFLAGS_FLASH) $(SDCC_FLAGS) -o $(TARGET).hex  $(REL) startup.rel
 
 $(TARGET).bin: $(TARGET).hex
-	objcopy -Iihex -Obinary $(TARGET).hex $(TARGET).bin
+	@objcopy -Iihex -Obinary $(TARGET).hex $(TARGET).bin
 
 clean:
-	rm -f startup.rel
-	rm -f $(ADB) $(ASM) $(LNK) $(LST) $(REL) $(RST) $(SYM)
-	rm -f $(TARGET) $(PCDB) $(PLNK) $(PMAP) $(PMEM) $(PAOM)
+	@rm -f startup.rel
+	@rm -f $(ADB) $(ASM) $(LNK) $(LST) $(REL) $(RST) $(SYM)
+	@rm -f $(TARGET) $(PCDB) $(PLNK) $(PMAP) $(PMEM) $(PAOM)
+	@rm -f *_preprocessed
 
 flash: $(TARGET).hex
 	$(CC_TOOL) -f -e -w $(TARGET).hex
