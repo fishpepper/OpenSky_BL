@@ -123,6 +123,11 @@ void bootloader_main(void) {
     led_green_on();
     led_red_on();
 
+    __asm
+        ljmp #(BOOTLOADER_SIZE)
+    __endasm;
+
+
     while (1) {
         // uart_putc_d(state);
         // do main statemachine
