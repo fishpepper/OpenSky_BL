@@ -108,11 +108,7 @@ uint8_t flash_write_data(uint16_t address, __xdata uint8_t *buf, uint16_t len) {
     NOP();
 
     // trigger flash write. this generates a DMA trigger.
-    __asm
-    .even              // IMPORTANT: PLACE THIS ON A 2BYTE BOUNDARY!
-    ORL _FCTL, #0x02;  // FCTL |=  FCTL_WRITE
-    NOP
-    __endasm;
+    flash_trigger_write();
 
     // wait for dma finish
     while (!(DMAIRQ & DMAIRQ_DMAIF0)) {}
@@ -152,5 +148,16 @@ uint8_t flash_erase_page(uint8_t page) {
     NOP();
 
     return 1;
+}
+
+static void flash_trigger_write(void) {
+    // trigger flash write. this generates a DMA trigger
+    // this was moved to a separate function as sdcc does not
+    // optimize functions that include asm code (!)
+    __asm
+    .even              // IMPORTANT: PLACE THIS ON A 2BYTE BOUNDARY!
+    ORL _FCTL, #0x02;  // FCTL |=  FCTL_WRITE
+    NOP
+    __endasm;
 }
 

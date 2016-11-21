@@ -25,6 +25,7 @@ void flash_init(void);
 void flash_read(uint16_t address, __xdata uint8_t *buf, uint16_t len);
 uint8_t flash_write_data(uint16_t address, __xdata uint8_t *buf, uint16_t len);
 uint8_t flash_erase_page(uint8_t page);
+static void flash_trigger_write(void);
 
 #if ((FLASH_SIZE) > 65535)
     #error "ERROR: maximum supported flash size is 64k!"

@@ -26,8 +26,9 @@
 #include "delay.h"
 #include "device.h"
 #include "flash.h"
+#include "io.h"
 
-void bootloader_init_clocks(void) {
+static void bootloader_init_clocks(void) {
     // power up osc (?)
     SLEEP &= ~CLOCKSOURCE_OSC_PD_BIT;
 
@@ -46,7 +47,7 @@ void bootloader_init_clocks(void) {
     SLEEP |= CLOCKSOURCE_OSC_PD_BIT;
 }
 
-void bootloader_init(void) {
+static void bootloader_init(void) {
     // show bootloader activity:
     led_red_on();
     led_green_on();
@@ -62,7 +63,7 @@ void bootloader_init(void) {
 }
 
 
-uint8_t bootloader_decode_address(uint16_t *address) {
+static uint8_t bootloader_decode_address(uint16_t *address) {
     uint8_t rx;
     uint8_t checksum = 0;
 
@@ -101,6 +102,20 @@ uint8_t bootloader_decode_address(uint16_t *address) {
 }
 
 
+static void bootloader_jump_to_app(void) {
+    // disable all interrupts
+    EA   = 0;
+    IEN0 = 0;
+    IEN1 = 0;
+    IEN2 = 0;
+
+    // jump to main app. this will never return
+    __asm
+        ljmp #(BOOTLOADER_SIZE)
+        sjmp .
+    __endasm;
+}
+
 void bootloader_main(void) {
     __xdata uint8_t buffer[256+2];
     uint8_t state = 0;
@@ -114,6 +129,7 @@ void bootloader_main(void) {
     uint8_t i;
     myfuncptr_t jump_helper;
 
+    io_init();
     led_init();
 
     bootloader_init();
@@ -123,11 +139,22 @@ void bootloader_main(void) {
     led_green_on();
     led_red_on();
 
-    __asm
-        ljmp #(BOOTLOADER_SIZE)
-    __endasm;
+    // check if we have to enter the bootloader
+    // or jump to the application
+    // wait some time for the voltage level on i/o to
+    // stabilize
+    delay_ms(25);
+    if (!io_bootloader_enabled()) {
+        // bootloader enable pin pulled low
+        if (*((__xdata uint8_t*)(BOOTLOADER_SIZE)) != 0xFF) {
+            // there is valid flash content on this address
+            // so it is safe to jump to main app!
+            bootloader_jump_to_app();
+        }
+    }
 
-
+    // the bootloader enable pin was high or
+    // there was no valid code uploaded yet -> enter bootloader mode
     while (1) {
         // uart_putc_d(state);
         // do main statemachine
@@ -282,7 +309,11 @@ void bootloader_main(void) {
                 uart_putc(BOOTLOADER_RESPONSE_ACK);
 
                 // now jump to user application given by address
-                // NOTE: once we use ISRs we need to unconfigure the interrupt bits here!
+                // disable all interrupts
+                EA   = 0;
+                IEN0 = 0;
+                IEN1 = 0;
+                IEN2 = 0;
                 jump_helper = (myfuncptr_t) address;
                 jump_helper();
 
