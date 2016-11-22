@@ -42,3 +42,11 @@
 # Debug files
 *.dSYM/
 *.su
+
+*.mem
+*.map
+*.lk
+
+.gitignore
+.project
+.cproject
