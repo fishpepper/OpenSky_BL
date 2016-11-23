@@ -114,12 +114,32 @@ void uart_init(void) {
     UxGCR = (UxGCR & ~0x1F) | (UART_BAUD_E);
 
     // set up config
-    uart_config.bit.START  = 0;  // startbit level = low
-    uart_config.bit.STOP   = 1;  // stopbit level = high
+#if BOOTLOADER_UART_INVERTED
+    //this is a really nice feature of the cc2510:
+    //we can invert the idle level of the usart
+    //by setting STOP to zero. by inverting
+    //the parity, the startbit, and the data
+    //we can effectively invert the usart in software :)
+    uart_config.bit.START  = 1; //startbit level = low
+    uart_config.bit.STOP   = 0; //stopbit level = high
+    uart_config.bit.D9     = 1; //UNEven parity
+#else
+    //standard usart, non-inverted mode
+    uart_config.bit.START  = 0; //startbit level = low
+    uart_config.bit.STOP   = 1; //stopbit level = high
+    uart_config.bit.D9     = 0; //Even parity
+#endif
+
     uart_config.bit.SPB    = 0;  // 1 stopbit
+#if BOOTLOADER_UART_USE_PARITY
+    // use parity
     uart_config.bit.PARITY = 1;  // 1 = parity enabled, D9=0 -> even parity
     uart_config.bit.BIT9   = 1;  // 8+1 parity bit
-    uart_config.bit.D9     = 0;  // EVEN parity
+#else
+    // no parity
+    uart_config.bit.PARITY = 0;  // no parity
+    uart_config.bit.BIT9   = 0;  // 8+0 parity bit
+#endif
     uart_config.bit.FLOW   = 0;  // no hw flow control
     uart_config.bit.ORDER  = 0;  // lsb first
 
@@ -149,7 +169,11 @@ uint8_t uart_getc(void) {
     while (!URXxIF) {}
 
     // fetch data
+#if BOOTLOADER_UART_INVERTED
+    res = 0xFF ^ UxDBUF;
+#else
     res = UxDBUF;
+#endif
 
     // clear flag
     URXxIF = 0;
@@ -159,7 +183,13 @@ uint8_t uart_getc(void) {
 
 void uart_putc(uint8_t c) {
     UTXxIF = 0;
+
+#if BOOTLOADER_UART_INVERTED
+    UxDBUF = 0xFF ^ c;
+#else
     UxDBUF = c;
+#endif
+
     while (!UTXxIF) {}
     UTXxIF = 0;
 }
