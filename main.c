@@ -136,8 +136,8 @@ void bootloader_main(void) {
     uart_init();
     flash_init();
 
-    led_green_on();
-    led_red_on();
+    led_green_off();
+    led_red_off();
 
     // check if we have to enter the bootloader
     // or jump to the application
@@ -152,6 +152,11 @@ void bootloader_main(void) {
             bootloader_jump_to_app();
         }
     }
+
+    led_green_on();
+    led_red_off();
+
+
 
     // the bootloader enable pin was high or
     // there was no valid code uploaded yet -> enter bootloader mode
