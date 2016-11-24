@@ -130,7 +130,12 @@ void uart_init(void) {
     uart_config.bit.D9     = 0; //Even parity
 #endif
 
+#if BOOTLOADER_UART_USE_2STOPBITS
+    uart_config.bit.SPB    = 1;  // 2 stopbit
+#else
     uart_config.bit.SPB    = 0;  // 1 stopbit
+#endif
+
 #if BOOTLOADER_UART_USE_PARITY
     // use parity
     uart_config.bit.PARITY = 1;  // 1 = parity enabled, D9=0 -> even parity
