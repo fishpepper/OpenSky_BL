@@ -132,13 +132,6 @@ void bootloader_main(void) {
     io_init();
     led_init();
 
-    bootloader_init();
-    uart_init();
-    flash_init();
-
-    led_green_off();
-    led_red_off();
-
     // check if we have to enter the bootloader
     // or jump to the application
     // wait some time for the voltage level on i/o to
@@ -152,6 +145,11 @@ void bootloader_main(void) {
             bootloader_jump_to_app();
         }
     }
+
+
+    bootloader_init();
+    uart_init();
+    flash_init();
 
     led_green_on();
     led_red_off();

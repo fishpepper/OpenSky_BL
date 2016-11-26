@@ -25,10 +25,10 @@
 // for a 26MHz Crystal:
 #define CC2510_BAUD_M_115200 34
 #define CC2510_BAUD_E_115200 12
-#define CC2510_BAUD_M_57600  34
-#define CC2510_BAUD_E_57600  11
-//best match for 100kbit/s = 99975.5859375 bit/s
-//baudrate = (((256.0 + baud_m)*2.0**baud_e) / (2**28)) * 26000000.0
+#define CC2510_BAUD_M_57600 34
+#define CC2510_BAUD_E_57600 11
+// best match for 100kbit/s = 99975.5859375 bit/s
+// baudrate = (((256.0 + baud_m)*2.0**baud_e) / (2**28)) * 26000000.0
 #define CC2510_BAUD_E_100000 11
 #define CC2510_BAUD_M_100000 248
 
@@ -44,8 +44,8 @@
     #define UART_BAUD_M CC2510_BAUD_M_100000
     #define UART_BAUD_E CC2510_BAUD_E_100000
 #else
-    #error INVALID BAUDRATE SELECTED! BOOTLOADER_UART_BAUDRATE
-#endif
+    #error INVALID BAUDRATE SELECTED ! BOOTLOADER_UART_BAUDRATE
+#endif  // BOOTLOADER_UART_BAUDRATE
 
 
 void uart_init(void);

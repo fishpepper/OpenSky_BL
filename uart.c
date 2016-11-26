@@ -61,7 +61,7 @@ void uart_init(void) {
 
     // make tx pin output:
     P0DIR |= (1<<3);
-#elif((BOOTLOADER_UART_NUM) == 0) && ((BOOTLOADER_UART_PORT) == 1)
+#elif ((BOOTLOADER_UART_NUM) == 0) && ((BOOTLOADER_UART_PORT) == 1)
     // -> USART0_P1
     //    use ALT2 -> Set flag -> P1_5 = TX / P1_4 = RX
     PERCFG |= (PERCFG_U0CFG);
@@ -74,10 +74,11 @@ void uart_init(void) {
 
     // make tx pin output:
     P1DIR |= (1<<5);
-#elif((BOOTLOADER_UART_NUM) == 1) && ((BOOTLOADER_UART_PORT) == 0)
+#elif ((BOOTLOADER_UART_NUM) == 1) && ((BOOTLOADER_UART_PORT) == 0)
     // -> USART1_P0
     //    use ALT1 -> Clear flag -> P0_4 = TX / P0_5 = RX
     PERCFG &= ~(PERCFG_U1CFG);
+
     // USART1 has priority when USART0 is also enabled
     P2DIR = (P2DIR & 0x3F) | 0b01000000;
 
@@ -89,10 +90,11 @@ void uart_init(void) {
 
     // make tx pin output:
     P0DIR |= (1<<4);
-#elif((BOOTLOADER_UART_NUM) == 1) && ((BOOTLOADER_UART_PORT) == 1)
+#elif ((BOOTLOADER_UART_NUM) == 1) && ((BOOTLOADER_UART_PORT) == 1)
     // -> USART1_P1
     //    use ALT2 -> set flag -> P1_6 = TX / P1_7 = RX
     PERCFG  |= (PERCFG_U1CFG);
+
     // USART1 has priority when USART0 is also enabled
     P2DIR = (P2DIR & 0x3F) | 0b01000000;
 
@@ -115,26 +117,26 @@ void uart_init(void) {
 
     // set up config
 #if BOOTLOADER_UART_INVERTED
-    //this is a really nice feature of the cc2510:
-    //we can invert the idle level of the usart
-    //by setting STOP to zero. by inverting
-    //the parity, the startbit, and the data
-    //we can effectively invert the usart in software :)
-    uart_config.bit.START  = 1; //startbit level = low
-    uart_config.bit.STOP   = 0; //stopbit level = high
-    uart_config.bit.D9     = 1; //UNEven parity
+    // this is a really nice feature of the cc2510:
+    // we can invert the idle level of the usart
+    // by setting STOP to zero. by inverting
+    // the parity, the startbit, and the data
+    // we can effectively invert the usart in software :)
+    uart_config.bit.START  = 1;  // startbit level = low
+    uart_config.bit.STOP   = 0;  // stopbit level = high
+    uart_config.bit.D9     = 1;  // UNEven parity
 #else
-    //standard usart, non-inverted mode
-    uart_config.bit.START  = 0; //startbit level = low
-    uart_config.bit.STOP   = 1; //stopbit level = high
-    uart_config.bit.D9     = 0; //Even parity
-#endif
+    // standard usart, non-inverted mode
+    uart_config.bit.START  = 0;  // startbit level = low
+    uart_config.bit.STOP   = 1;  // stopbit level = high
+    uart_config.bit.D9     = 0;  // Even parity
+#endif  // BOOTLOADER_UART_INVERTED
 
 #if BOOTLOADER_UART_USE_2STOPBITS
     uart_config.bit.SPB    = 1;  // 2 stopbit
 #else
     uart_config.bit.SPB    = 0;  // 1 stopbit
-#endif
+#endif  // BOOTLOADER_UART_USE_2STOPBITS
 
 #if BOOTLOADER_UART_USE_PARITY
     // use parity
@@ -144,7 +146,8 @@ void uart_init(void) {
     // no parity
     uart_config.bit.PARITY = 0;  // no parity
     uart_config.bit.BIT9   = 0;  // 8+0 parity bit
-#endif
+#endif  // BOOTLOADER_USE_PARITY
+
     uart_config.bit.FLOW   = 0;  // no hw flow control
     uart_config.bit.ORDER  = 0;  // lsb first
 
@@ -178,7 +181,7 @@ uint8_t uart_getc(void) {
     res = 0xFF ^ UxDBUF;
 #else
     res = UxDBUF;
-#endif
+#endif  // BOOTLOADER_UART_INVERTED
 
     // clear flag
     URXxIF = 0;
@@ -193,7 +196,9 @@ void uart_putc(uint8_t c) {
     UxDBUF = 0xFF ^ c;
 #else
     UxDBUF = c;
-#endif
+#endif  // BOOTLOADER_UART_INVERTED
+
+    led_red_toggle();
 
     while (!UTXxIF) {}
     UTXxIF = 0;
