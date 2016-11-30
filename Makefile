@@ -31,8 +31,6 @@ ifdef DEBUG
 CFLAGS += --debug
 endif
 
-STYLECHECKTOOT ?= 
-
 SRC = main.c uart.c delay.c flash.c io.c
 
 ADB=$(SRC:.c=.adb)
@@ -54,9 +52,13 @@ HEADER=$(wildcard *.h)
 all: stylecheck $(BL_TARGET).hex
 
 stylecheck: $(HEADER) $(SRC)
-	./stylecheck/cpplint.py --root=$(STYLECHECKROOT) \
+ifdef STYLECHECK_DISABLED
+	@echo "stylecheck disabled by parameter"
+else
+	./stylecheck/cpplint.py \
 		--filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays \
 		--extensions="h,c" --linelength=100 $(HEADER) $(SRC) || true
+endif
 
 startup.rel : startup.s
 	@cpp -P  $(CFLAGS) $< > $<_preprocessed
