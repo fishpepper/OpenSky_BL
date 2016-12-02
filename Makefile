@@ -12,7 +12,7 @@ CFLAGS    += -DFLASH_PAGESIZE=$(FLASH_PAGESIZE)
 
 #allow a custom config file to be passed
 CONFIG_INCLUDE_DIR ?= default
-CFLAGS += -I $(CONFIG_INCLUDE_DIR)
+CFLAGS += -I . -I $(CONFIG_INCLUDE_DIR)
 
 SDCC_FLAGS = --model-small --opt-code-speed -I /usr/share/sdcc/include $(CFLAGS)
 LDFLAGS_FLASH = \
